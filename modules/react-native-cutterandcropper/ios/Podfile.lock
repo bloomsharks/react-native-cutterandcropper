@@ -1,0 +1,21 @@
+PODS:
+  - CropViewController (2.5.2)
+
+DEPENDENCIES:
+  - CropViewController (from `https://github.com/wammy67/TOCropViewController`)
+
+EXTERNAL SOURCES:
+  CropViewController:
+    :git: https://github.com/wammy67/TOCropViewController
+
+CHECKOUT OPTIONS:
+  CropViewController:
+    :commit: 5f727daecf47aa27c2199cf68b6766fe132906c0
+    :git: https://github.com/wammy67/TOCropViewController
+
+SPEC CHECKSUMS:
+  CropViewController: 2bf3e902bd20fc273a46b258ed1944aa119746d9
+
+PODFILE CHECKSUM: adb33cfc83d48a4cc42b7fd7f8c2be07ef9e68a5
+
+COCOAPODS: 1.6.1

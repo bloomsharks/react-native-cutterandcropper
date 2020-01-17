@@ -1,0 +1,6 @@
+framework module Pods_Cutterandcropper {
+  umbrella header "Pods-Cutterandcropper-umbrella.h"
+
+  export *
+  module * { export * }
+}
