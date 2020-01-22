@@ -17,15 +17,14 @@ class Presenter : NSObject,EmbededControllerDelegate {
     var controller: EmbededController!
     var resolver: RCTPromiseResolveBlock!
     
-    //@objc(presentImagePicker)
-    @objc func presentImagePicker(_ proportion: String, mediaType: String, resolver resolve: @escaping RCTPromiseResolveBlock,
+    @objc func presentImagePicker(_ mediaType: String, proportion: String, resolver resolve: @escaping RCTPromiseResolveBlock,
               rejecter reject: @escaping RCTPromiseRejectBlock){
         DispatchQueue.main.async {
+            
             self.controller = EmbededController()
             let curentViewController = RCTPresentedViewController()
             self.controller.delegate = self
             self.controller.imageType = proportion
-            //  self.callback = callback
             print(proportion,mediaType)
             curentViewController!.present(self.controller, animated: true, completion: nil)
             self.resolver = resolve
@@ -36,7 +35,7 @@ class Presenter : NSObject,EmbededControllerDelegate {
     
     
     func ImageMeta(data: [String : Any]) {
-          self.data = data
+        self.data = data
         self.resolver(data)
         RCTPresentedViewController()?.dismiss(animated: true, completion: nil)
     }
