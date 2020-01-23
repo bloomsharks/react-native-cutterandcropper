@@ -11,6 +11,7 @@ import UIKit
 
 protocol EmbededControllerDelegate : class {
     func ImageMeta(data: [String:Any])
+    func didCancelEmbededController()
 }
 
 class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
@@ -20,6 +21,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
     private var imagePicker : UIImagePickerController!
     private var cropController : CropViewController!
     private var imageUri : String?
+    private var compressionQuality : CGFloat = 0.6
     
     private let randomInt = Int.random(in: 0..<100000)
     var imageType : String!
@@ -32,10 +34,8 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         imagePicker.sourceType = .photoLibrary
         imagePicker.allowsEditing = false
         imagePicker.delegate = self
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+        imagePicker.mediaTypes = ["public.image"]
+        imagePicker.modalPresentationStyle = .fullScreen
         self.present(imagePicker, animated: true, completion: nil)
     }
     
@@ -71,13 +71,12 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         }
     }
     
-    private func saveImage(image: UIImage, withName name: String) {
-        
+    private func saveImage(image: UIImage) {
         let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
         
         let targetURL = tempDirectoryURL.appendingPathComponent("\(randomInt).jpg")
         
-        if let data = image.jpegData(compressionQuality: 1) {
+        if let data = image.jpegData(compressionQuality: compressionQuality) {
             do {
                 try data.write(to: targetURL)
                 self.imageUri = targetURL.absoluteString
@@ -87,20 +86,29 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         }
     }
     
-    internal func cropViewController(_ cropViewController: CropViewController, didCropToImage image: UIImage, withRect cropRect: CGRect, angle: Int) {
+    func cropViewController(_ cropViewController: CropViewController, didCropToImage image: UIImage, withRect cropRect: CGRect, angle: Int) {
         // image variable is the newly cropped version of the original image
-        cropViewController.dismiss(animated: true) {
-           
-            self.saveImage(image: image, withName: self.imageType)
+        cropViewController.dismiss(animated: true) {[weak self] in
+            
+            self?.saveImage(image: image)
             
             let height : Any = image.size.height * image.scale
             let width : Any = image.size.width * image.scale
-            let fileName : Any = "\(self.randomInt).jpg"
-            let fileSize : Any = image.jpegData(compressionQuality: 1)?.count ?? 0
-            let uri : Any = self.imageUri ?? "nil"
+            let fileName : Any = "\(self?.randomInt ?? 0).jpg"
+            let fileSize : Any = image.jpegData(compressionQuality: self?.compressionQuality ?? 1)?.count ?? 0
+            let uri : Any = self?.imageUri ?? "nil"
             let type : String = "image/jpeg"
             
-            self.delegate?.ImageMeta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
+            self?.delegate?.ImageMeta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
         }
     }
+    
+    func cropViewController(_ cropViewController: CropViewController, didFinishCancelled cancelled: Bool) {
+        self.delegate?.didCancelEmbededController()
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        self.delegate?.didCancelEmbededController()
+    }
+    
 }
