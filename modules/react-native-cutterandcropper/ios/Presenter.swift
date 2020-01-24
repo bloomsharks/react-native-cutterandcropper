@@ -24,8 +24,10 @@ class Presenter : NSObject,EmbededControllerDelegate {
         DispatchQueue.main.async {
             self.controller = EmbededController()
             let curentViewController = RCTPresentedViewController()
+            
             self.controller.delegate = self
             self.controller.imageType = proportion
+          
             print(proportion,mediaType)
         //    self.controller.modalPresentationStyle = .fullScreen
             curentViewController!.present(self.controller, animated: true, completion: nil)

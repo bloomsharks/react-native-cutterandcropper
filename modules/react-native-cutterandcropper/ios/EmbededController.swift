@@ -30,6 +30,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.isHidden = true
         self.imagePicker = UIImagePickerController()
         imagePicker.sourceType = .photoLibrary
         imagePicker.allowsEditing = false
