@@ -1,21 +1,29 @@
 PODS:
   - CropViewController (2.5.2)
+  - PryntTrimmerView (4.0.0)
 
 DEPENDENCIES:
   - CropViewController (from `https://github.com/wammy67/TOCropViewController`)
+  - PryntTrimmerView (from `https://github.com/wammy67/PryntTrimmerView`)
 
 EXTERNAL SOURCES:
   CropViewController:
     :git: https://github.com/wammy67/TOCropViewController
+  PryntTrimmerView:
+    :git: https://github.com/wammy67/PryntTrimmerView
 
 CHECKOUT OPTIONS:
   CropViewController:
     :commit: 5f727daecf47aa27c2199cf68b6766fe132906c0
     :git: https://github.com/wammy67/TOCropViewController
+  PryntTrimmerView:
+    :commit: 5636e5cba63b8a29fae4467296c25c3fbb65b285
+    :git: https://github.com/wammy67/PryntTrimmerView
 
 SPEC CHECKSUMS:
   CropViewController: 2bf3e902bd20fc273a46b258ed1944aa119746d9
+  PryntTrimmerView: 67e67573ffd4c073f1308effa66aefd0cfa667a0
 
-PODFILE CHECKSUM: adb33cfc83d48a4cc42b7fd7f8c2be07ef9e68a5
+PODFILE CHECKSUM: da18624a15b56db4261496d25fea7109395c05a3
 
 COCOAPODS: 1.6.1

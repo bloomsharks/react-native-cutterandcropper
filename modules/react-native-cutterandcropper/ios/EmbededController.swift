@@ -30,7 +30,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.isHidden = true
+        view.alpha = 0
         self.imagePicker = UIImagePickerController()
         imagePicker.sourceType = .photoLibrary
         imagePicker.allowsEditing = false
@@ -38,6 +38,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         imagePicker.mediaTypes = ["public.image"]
         imagePicker.modalPresentationStyle = .fullScreen
         self.present(imagePicker, animated: true, completion: nil)
+        
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
@@ -49,7 +50,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         cropController.toolbarPosition = .top
         cropController.cancelButtonTitle = ""
         
-        
+    
         switch imageType{
         case "profile":
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
@@ -66,7 +67,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         }
         
         self.image = image
-        
+      
         imagePicker.dismiss(animated: true) {
             self.present(self.cropController, animated: true)
         }

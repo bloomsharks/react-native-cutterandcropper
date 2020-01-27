@@ -10,6 +10,7 @@ target 'Cutterandcropper' do
 
   #use_native_modules!
   pod 'CropViewController', :git => 'https://github.com/wammy67/TOCropViewController'
+  pod 'PryntTrimmerView', :git => 'https://github.com/wammy67/PryntTrimmerView'
     end
     
 
