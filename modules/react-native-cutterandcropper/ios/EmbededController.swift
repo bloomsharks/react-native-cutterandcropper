@@ -37,20 +37,23 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         imagePicker.delegate = self
         imagePicker.mediaTypes = ["public.image"]
         imagePicker.modalPresentationStyle = .fullScreen
+  
+       
         self.present(imagePicker, animated: true, completion: nil)
         
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         guard let image = (info[UIImagePickerController.InfoKey.originalImage] as? UIImage) else { return }
-        
+
         self.cropController = CropViewController(croppingStyle: .default, image: image)
         cropController.modalPresentationStyle = .fullScreen
         cropController.delegate = self
         cropController.toolbarPosition = .top
         cropController.cancelButtonTitle = ""
-        
-    
+
+
+
         switch imageType{
         case "profile":
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
@@ -65,13 +68,30 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         default:
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
         }
-        
+
         self.image = image
-      
+
         imagePicker.dismiss(animated: true) {
             self.present(self.cropController, animated: true)
         }
     }
+    
+//    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+//
+//        let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL
+//
+//        let videoCut = VideoCutterController()
+//        videoCut.modalPresentationStyle = .fullScreen
+//        videoCut.url = videoURL?.absoluteURL
+//
+//         picker.dismiss(animated: true, completion: {
+//             self.present(videoCut, animated: true)
+//         })
+//
+//     }
+
+    
+    
     
     private func saveImage(image: UIImage) {
         let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)

@@ -27,12 +27,12 @@ class Presenter : NSObject,EmbededControllerDelegate {
             
             self.controller.delegate = self
             self.controller.imageType = proportion
-          
+            
             print(proportion,mediaType)
             curentViewController!.present(self.controller, animated: true, completion: nil)
             self.resolver = resolve
             guard #available(iOS 12, *) else{
-            return
+                return
             }
             RCTKeyWindow()?.backgroundColor = .white
         }
@@ -40,8 +40,9 @@ class Presenter : NSObject,EmbededControllerDelegate {
     
     func didCancelEmbededController() {
         RCTPresentedViewController()?.dismiss(animated: true, completion: {
-            RCTPresentedViewController()?.dismiss(animated: true, completion: nil)
+        RCTPresentedViewController()?.dismiss(animated: true, completion: nil)
         })
+    
     }
     
     func ImageMeta(data: [String : Any]) {
