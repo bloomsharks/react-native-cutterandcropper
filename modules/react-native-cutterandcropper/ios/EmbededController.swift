@@ -113,7 +113,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
                          imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
                      }
                     
-                     if mediaType == "image"{
+                     if mediaType == "photo"{
                          imagePicker.mediaTypes = ["public.image"]
                      }else if mediaType == "video"{
                          imagePicker.mediaTypes = ["public.movie"]
@@ -145,7 +145,6 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
             }
         }
     }
-    
     
    private func emitMetaData(of image:UIImage){
         let height : Any = image.size.height * image.scale

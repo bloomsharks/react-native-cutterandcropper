@@ -44,6 +44,7 @@ class VideoScrollView: UIView {
         scrollView.topAnchor.constraint(equalTo: topAnchor).isActive = true
     }
 
+    
     func setupVideo(with asset: AVAsset) {
 
         guard let track = asset.tracks(withMediaType: AVMediaType.video).first else { return }

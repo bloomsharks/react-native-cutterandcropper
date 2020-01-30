@@ -27,6 +27,10 @@ class AssetVideoScrollView: UIScrollView {
         setupSubviews()
     }
 
+    func resetScrollView(){
+        self.setContentOffset(.zero, animated: true)
+    }
+    
     private func setupSubviews() {
 
         backgroundColor = .clear
@@ -57,6 +61,7 @@ class AssetVideoScrollView: UIScrollView {
             return
         }
 
+        
         generator?.cancelAllCGImageGeneration()
         removeFormerThumbnails()
         let newContentSize = setContentSize(for: asset)
@@ -115,6 +120,8 @@ class AssetVideoScrollView: UIScrollView {
         }
     }
 
+    
+    
     private func getThumbnailTimes(for asset: AVAsset, numberOfThumbnails: Int) -> [NSValue] {
         let timeIncrement = (asset.duration.seconds * 1000) / Double(numberOfThumbnails)
         var timesForThumbnails = [NSValue]()

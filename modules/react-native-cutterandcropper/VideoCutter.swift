@@ -9,7 +9,7 @@ import UIKit
 import AVFoundation
 
 
-class videoCutter {
+final class VideoCutter {
     
     static func cropVideo(sourceURL: URL, startTime: Double, endTime: Double, completion: ((_ outputUrl: URL) -> Void)? = nil)
     {

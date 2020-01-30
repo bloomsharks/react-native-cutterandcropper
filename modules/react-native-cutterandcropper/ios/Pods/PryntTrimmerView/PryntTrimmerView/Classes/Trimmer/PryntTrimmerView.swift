@@ -73,7 +73,7 @@ public protocol TrimmerViewDelegate: class {
     private let handleWidth: CGFloat = 15
 
     /// The minimum duration allowed for the trimming. The handles won't pan further if the minimum duration is attained.
-    public var minDuration: Double = 3
+    public var minDuration: Double = 1
 
     // MARK: - View & constraints configurations
 
@@ -267,10 +267,15 @@ public protocol TrimmerViewDelegate: class {
 
     override func assetDidChange(newAsset: AVAsset?) {
         super.assetDidChange(newAsset: newAsset)
-        resetHandleViewPosition()
+            resetHandleViewPosition()
+    }
+    
+    func resetTrimmerView(){
+         assetPreview.resetScrollView()
+         resetHandleViewPosition()
     }
 
-    private func resetHandleViewPosition() {
+     func resetHandleViewPosition() {
         leftConstraint?.constant = 0
         rightConstraint?.constant = 0
         layoutIfNeeded()

@@ -9,7 +9,7 @@ import UIKit
 import AVFoundation
 
 protocol VideoCutterDelegate : class {
-  func didCancelController()
+    func didCancelController()
 }
 
 
@@ -18,8 +18,25 @@ class VideoCutterController : UIViewController {
     private let trimmerView = TrimmerView()
     private var player: AVPlayer?
     weak var delegate : VideoCutterDelegate?
+    var startTime : CMTime?
+    var endTime : CMTime?
+    var playbackTimeCheckerTimer: Timer?
+    var trimmerPositionChangedTimer: Timer?
     var url : URL!
     
+    private var leftMaskView: UIView = {
+        let leftMaskView = UIView(frame: .zero)
+        leftMaskView.backgroundColor = .white
+        leftMaskView.alpha = 0.7
+        return leftMaskView
+    }()
+    
+    private var rightMaskView: UIView = {
+        let rightMaskView = UIView(frame: .zero)
+        rightMaskView.backgroundColor = .white
+        rightMaskView.alpha = 0.7
+        return rightMaskView
+    }()
     
     private var playerView: UIView = {
         let playerView = UIView(frame: .zero)
@@ -36,26 +53,30 @@ class VideoCutterController : UIViewController {
         let backButton = UIButton(frame: .zero)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
         backButton.addTarget(self,
-        action: #selector(didTapBackBtn),
-        for: .touchUpInside)
+                             action: #selector(didTapBackBtn),
+                             for: .touchUpInside)
         return backButton
     }()
     
     private let nextButton : UIButton = {
-        let backButton = UIButton(frame: .zero)
-        backButton.setTitle("Next", for: .normal)
-        backButton.setTitleColor(.black, for: .normal)
-        return backButton
+        let nextButton = UIButton(frame: .zero)
+        nextButton.setTitle("Next", for: .normal)
+        nextButton.setTitleColor(.black, for: .normal)
+        nextButton.addTarget(self,
+        action: #selector(didTapNextBtn),
+        for: .touchUpInside)
+        return nextButton
     }()
     
     
     private let titleLabel : UILabel = {
         let title = UILabel(frame: .zero)
         title.text = "Cutter"
+        title.textColor = .black
         return title
     }()
     
-  
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -80,10 +101,19 @@ class VideoCutterController : UIViewController {
     private func layout(){
         self.view.addSubview(trimmerView)
         self.view.addSubview(playerView)
+        self.view.addSubview(leftMaskView)
+        self.view.addSubview(rightMaskView)
         self.view.addSubview(topBar)
+        
         topBar.addSubview(backButton)
         topBar.addSubview(titleLabel)
         topBar.addSubview(nextButton)
+        
+        view.bringSubviewToFront(leftMaskView)
+        view.bringSubviewToFront(rightMaskView)
+        
+        leftMaskView.layer.zPosition = 1
+        rightMaskView.layer.zPosition = 1
         
         self.topBar.translatesAutoresizingMaskIntoConstraints = false
         self.topBar.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
@@ -110,7 +140,9 @@ class VideoCutterController : UIViewController {
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.titleLabel.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
         self.titleLabel.centerXAnchor.constraint(equalTo: topBar.centerXAnchor).isActive = true
-
+        self.titleLabel.widthAnchor.constraint(equalToConstant: 70).isActive = true
+        self.titleLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
         self.playerView.translatesAutoresizingMaskIntoConstraints = false
         self.playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         self.playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -122,10 +154,33 @@ class VideoCutterController : UIViewController {
         self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
         self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 70).isActive = true
         self.trimmerView.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        
+        self.leftMaskView.translatesAutoresizingMaskIntoConstraints = false
+        self.leftMaskView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        self.leftMaskView.rightAnchor.constraint(equalTo: self.trimmerView.leftAnchor).isActive = true
+        self.leftMaskView.topAnchor.constraint(equalTo: trimmerView.topAnchor).isActive = true
+        self.leftMaskView.heightAnchor.constraint(equalTo: trimmerView.heightAnchor).isActive = true
+        
+        self.rightMaskView.translatesAutoresizingMaskIntoConstraints = false
+        self.rightMaskView.leftAnchor.constraint(equalTo: trimmerView.rightAnchor).isActive = true
+        self.rightMaskView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        self.rightMaskView.topAnchor.constraint(equalTo: trimmerView.topAnchor).isActive = true
+        self.rightMaskView.heightAnchor.constraint(equalTo: trimmerView.heightAnchor).isActive = true
+        
     }
     
     @objc func didTapBackBtn(){
         self.delegate?.didCancelController()
+    }
+    
+    @objc func didTapNextBtn(){
+        self.trimmerView.resetTrimmerView()
+//        VideoCutter.cropVideo(sourceURL: self.url, startTime: self.startTime!.seconds, endTime: self.endTime!.seconds,completion: {
+//            url in print(AVAsset(url: url).duration.seconds)
+            
+            
+      //  })
+        
     }
     
     private func addVideoPlayer(with asset: AVAsset, playerView: UIView) {
@@ -143,6 +198,19 @@ class VideoCutterController : UIViewController {
         playerView.layer.addSublayer(layer)
     }
     
+    private func startPlaybackTimeChecker() {
+        
+        stopPlaybackTimeChecker()
+        playbackTimeCheckerTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self,
+                                                        selector:
+            #selector(onPlaybackTimeChecker), userInfo: nil, repeats: true)
+    }
+    
+    private func stopPlaybackTimeChecker() {
+        
+        playbackTimeCheckerTimer?.invalidate()
+        playbackTimeCheckerTimer = nil
+    }
     
     @objc func itemDidFinishPlaying(_ notification: Notification) {
         if let startTime = trimmerView.startTime {
@@ -150,26 +218,43 @@ class VideoCutterController : UIViewController {
         }
     }
     
+    @objc func onPlaybackTimeChecker() {
+        
+        guard let startTime = trimmerView.startTime, let endTime = trimmerView.endTime, let player = player else {
+            return
+        }
+        
+        let playBackTime = player.currentTime()
+        trimmerView.seek(to: playBackTime)
+        
+        if playBackTime >= endTime {
+            player.seek(to: startTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
+            trimmerView.seek(to: startTime)
+        }
+    }
+    
+    
 }
 
 extension VideoCutterController: TrimmerViewDelegate {
     func positionBarStoppedMoving(_ playerTime: CMTime) {
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
         player?.play()
-        //startPlaybackTimeChecker()
+        startPlaybackTimeChecker()
     }
     
     func didChangePositionBar(_ playerTime: CMTime) {
-        //stopPlaybackTimeChecker()
+        stopPlaybackTimeChecker()
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
         let duration = (trimmerView.endTime! - trimmerView.startTime!).seconds
-        
+        self.startTime = trimmerView.startTime!
+        self.endTime = trimmerView.endTime!
         print(duration)
     }
 }
 
- extension UIView {
+extension UIView {
     func dropShadow() {
         self.layer.masksToBounds = false
         self.layer.shadowColor = UIColor.black.cgColor
@@ -179,6 +264,6 @@ extension VideoCutterController: TrimmerViewDelegate {
         self.layer.shadowPath = UIBezierPath(rect: self.bounds).cgPath
         self.layer.shouldRasterize = true
         self.layer.rasterizationScale = UIScreen.main.scale
-
+        
     }
 }
