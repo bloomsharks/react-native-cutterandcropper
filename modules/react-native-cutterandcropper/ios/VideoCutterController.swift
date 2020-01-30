@@ -8,6 +8,9 @@
 import UIKit
 import AVFoundation
 
+protocol VideoCutterDelegate : class {
+    func didCancelController()
+}
 
 
 class VideoCutterController : UIViewController {
@@ -15,6 +18,8 @@ class VideoCutterController : UIViewController {
     private let trimmerView = TrimmerView()
     private var player: AVPlayer?
     var url : URL!
+    weak var delegate : VideoCutterDelegate?
+    
     
     private var playerView: UIView = {
         let playerView = UIView(frame: .zero)
@@ -30,6 +35,9 @@ class VideoCutterController : UIViewController {
     private let backButton : UIButton = {
         let backButton = UIButton(frame: .zero)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
+        backButton.addTarget(self,
+                             action: #selector(didTapBackBtn),
+                             for: .touchUpInside)
         return backButton
     }()
     
@@ -47,11 +55,11 @@ class VideoCutterController : UIViewController {
         return title
     }()
     
-  
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-    
+        
         self.view.backgroundColor = .white
         trimmerView.delegate = self
         trimmerView.mainColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
@@ -103,7 +111,7 @@ class VideoCutterController : UIViewController {
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.titleLabel.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
         self.titleLabel.centerXAnchor.constraint(equalTo: topBar.centerXAnchor).isActive = true
-
+        
         self.playerView.translatesAutoresizingMaskIntoConstraints = false
         self.playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         self.playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
@@ -117,6 +125,10 @@ class VideoCutterController : UIViewController {
         self.trimmerView.heightAnchor.constraint(equalToConstant: 100).isActive = true
     }
     
+    
+    @objc func didTapBackBtn(){
+        self.delegate?.didCancelController()
+    }
     
     private func addVideoPlayer(with asset: AVAsset, playerView: UIView) {
         let playerItem = AVPlayerItem(asset: asset)
@@ -159,7 +171,7 @@ extension VideoCutterController: TrimmerViewDelegate {
     }
 }
 
- extension UIView {
+extension UIView {
     func dropShadow() {
         self.layer.masksToBounds = false
         self.layer.shadowColor = UIColor.black.cgColor
@@ -169,6 +181,6 @@ extension VideoCutterController: TrimmerViewDelegate {
         self.layer.shadowPath = UIBezierPath(rect: self.bounds).cgPath
         self.layer.shouldRasterize = true
         self.layer.rasterizationScale = UIScreen.main.scale
-
+        
     }
 }
