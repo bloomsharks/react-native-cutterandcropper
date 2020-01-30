@@ -41,7 +41,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
-        if mediaType == "image"{
+        if mediaType == "photo"{
             let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage
             guard skipEditing != true else{
                 saveImage(image: image)
