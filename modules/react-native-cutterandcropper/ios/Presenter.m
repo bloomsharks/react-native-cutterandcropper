@@ -12,6 +12,6 @@
 
 @interface RCT_EXTERN_MODULE(Presenter, NSObject)
 
-RCT_EXTERN_METHOD(presentImagePicker:(NSString *)mediaType proportion:(NSString *)proportion  resolver:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(presentImagePicker:(NSString *)mediaType proportion:(NSString *)proportion skip:(BOOL)skip resolver:(RCTPromiseResolveBlock)resolve
    rejecter:(RCTPromiseRejectBlock)reject)
 @end

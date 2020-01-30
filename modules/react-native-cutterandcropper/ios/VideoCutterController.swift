@@ -8,18 +8,13 @@
 import UIKit
 import AVFoundation
 
-protocol VideoCutterDelegate : class {
-  func didCancelController()
-}
 
 
 class VideoCutterController : UIViewController {
     
     private let trimmerView = TrimmerView()
     private var player: AVPlayer?
-    weak var delegate : VideoCutterDelegate?
     var url : URL!
-    
     
     private var playerView: UIView = {
         let playerView = UIView(frame: .zero)
@@ -35,9 +30,6 @@ class VideoCutterController : UIViewController {
     private let backButton : UIButton = {
         let backButton = UIButton(frame: .zero)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
-        backButton.addTarget(self,
-        action: #selector(didTapBackBtn),
-        for: .touchUpInside)
         return backButton
     }()
     
@@ -59,6 +51,7 @@ class VideoCutterController : UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+    
         self.view.backgroundColor = .white
         trimmerView.delegate = self
         trimmerView.mainColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
@@ -118,15 +111,12 @@ class VideoCutterController : UIViewController {
         self.playerView.topAnchor.constraint(equalTo: topBar.bottomAnchor).isActive = true
         
         self.trimmerView.translatesAutoresizingMaskIntoConstraints = false
-        self.trimmerView.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 16).isActive = true
-        self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
+        self.trimmerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 70).isActive = true
         self.trimmerView.heightAnchor.constraint(equalToConstant: 100).isActive = true
     }
     
-    @objc func didTapBackBtn(){
-        self.delegate?.didCancelController()
-    }
     
     private func addVideoPlayer(with asset: AVAsset, playerView: UIView) {
         let playerItem = AVPlayerItem(asset: asset)

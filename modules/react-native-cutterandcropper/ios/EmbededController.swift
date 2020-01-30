@@ -7,53 +7,87 @@
 //
 
 import UIKit
-//import CropViewController
+import AVFoundation
 
 protocol EmbededControllerDelegate : class {
-    func ImageMeta(data: [String:Any])
-    func didCancelEmbededController()
+    func Meta(data: [String:Any])
 }
 
-class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutterDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    
     
     @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
-    private var imagePicker : UIImagePickerController!
-    private var cropController : CropViewController!
     private var imageUri : String?
     private var compressionQuality : CGFloat = 0.6
+     var imagePicker = UIImagePickerController()
+    
     
     private let randomInt = Int.random(in: 0..<100000)
     var imageType : String!
+    var mediaType : String!
+    var skipEditing : Bool!
     
     weak var delegate : EmbededControllerDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.alpha = 0
-        self.imagePicker = UIImagePickerController()
-        imagePicker.sourceType = .photoLibrary
-        imagePicker.allowsEditing = false
-        imagePicker.delegate = self
-        imagePicker.mediaTypes = ["public.image"]
-        imagePicker.modalPresentationStyle = .fullScreen
-  
-       
-        self.present(imagePicker, animated: true, completion: nil)
+      view.isHidden = true
+      presentImagePicker()
+    }
+    
+    
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        if mediaType == "image"{
+            let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage
+            guard skipEditing != true else{
+                saveImage(image: image)
+                emitMetaData(of: image)
+                return
+            }
+            let cropController = setupCropController(with: image)
+            self.navigationController?.pushViewController(cropController, animated: true)
+            
+        }else if mediaType == "video"{
+            if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
+                guard skipEditing != true else{
+                    self.delegate?.Meta(data: ["uri":videoURL.absoluteString])
+                    return
+                }
+                let videoCutterController = VideoCutterController()
+                videoCutterController.delegate = self
+                videoCutterController.modalPresentationStyle = .fullScreen
+                videoCutterController.url = videoURL.absoluteURL
+                self.navigationController?.pushViewController(videoCutterController, animated: true)
+            }
+        }else{
+            if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{
+                saveImage(image: image)
+                emitMetaData(of: image)
+            }else if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
+                self.delegate?.Meta(data: ["uri":videoURL.absoluteString])
+            }
+        }
+        
+        //    self.image = image
+        
+        //   self.navigationController?.pushViewController(cropController, animated: true)
         
     }
     
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        guard let image = (info[UIImagePickerController.InfoKey.originalImage] as? UIImage) else { return }
-
-        self.cropController = CropViewController(croppingStyle: .default, image: image)
+    
+    func setupCropController(with image:UIImage) -> CropViewController{
+        
+        let cropController = CropViewController(croppingStyle: .default, image: image)
         cropController.modalPresentationStyle = .fullScreen
         cropController.delegate = self
         cropController.toolbarPosition = .top
         cropController.cancelButtonTitle = ""
-
-
-
+        
+        
         switch imageType{
         case "profile":
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
@@ -68,30 +102,34 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         default:
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
         }
-
-        self.image = image
-
-        imagePicker.dismiss(animated: true) {
-            self.present(self.cropController, animated: true)
-        }
+        return cropController
     }
     
-//    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-//
-//        let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL
-//
-//        let videoCut = VideoCutterController()
-//        videoCut.modalPresentationStyle = .fullScreen
-//        videoCut.url = videoURL?.absoluteURL
-//
-//         picker.dismiss(animated: true, completion: {
-//             self.present(videoCut, animated: true)
-//         })
-//
-//     }
-
-    
-    
+    func presentImagePicker(){
+                     let imagePicker = UIImagePickerController()
+                     imagePicker.allowsEditing = false
+                     imagePicker.delegate = self
+                     if #available(iOS 11.0, *) {
+                         imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
+                     }
+                    
+                     if mediaType == "image"{
+                         imagePicker.mediaTypes = ["public.image"]
+                     }else if mediaType == "video"{
+                         imagePicker.mediaTypes = ["public.movie"]
+                     }else{
+                         imagePicker.mediaTypes = ["public.movie","public.image"]
+                     }
+                     
+                     
+                     self.navigationController?.setNavigationBarHidden(true, animated: false)
+                     
+                     imagePicker.willMove(toParent: self.navigationController)
+                     self.navigationController!.addChild(imagePicker)
+                     imagePicker.view.frame = self.view.frame
+                     self.navigationController!.view.addSubview(imagePicker.view)
+                     imagePicker.didMove(toParent: self.navigationController!)
+    }
     
     private func saveImage(image: UIImage) {
         let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
@@ -108,29 +146,38 @@ class EmbededController : UIViewController,CropViewControllerDelegate, UIImagePi
         }
     }
     
+    
+   private func emitMetaData(of image:UIImage){
+        let height : Any = image.size.height * image.scale
+        let width : Any = image.size.width * image.scale
+        let fileName : Any = "\(self.randomInt).jpg"
+        let fileSize : Any = image.jpegData(compressionQuality: self.compressionQuality )?.count ?? 0
+        let uri : Any = self.imageUri ?? "nil"
+        let type : String = "image/jpeg"
+        
+        self.delegate?.Meta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
+    }
+    
+    
     func cropViewController(_ cropViewController: CropViewController, didCropToImage image: UIImage, withRect cropRect: CGRect, angle: Int) {
-        // image variable is the newly cropped version of the original image
-        cropViewController.dismiss(animated: true) {[weak self] in
-            
-            self?.saveImage(image: image)
-            
-            let height : Any = image.size.height * image.scale
-            let width : Any = image.size.width * image.scale
-            let fileName : Any = "\(self?.randomInt ?? 0).jpg"
-            let fileSize : Any = image.jpegData(compressionQuality: self?.compressionQuality ?? 1)?.count ?? 0
-            let uri : Any = self?.imageUri ?? "nil"
-            let type : String = "image/jpeg"
-            
-            self?.delegate?.ImageMeta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
-        }
+        self.saveImage(image: image)
+        self.emitMetaData(of:image)
     }
     
     func cropViewController(_ cropViewController: CropViewController, didFinishCancelled cancelled: Bool) {
-        self.delegate?.didCancelEmbededController()
+        //    self.navigationController?.setNavigationBarHidden(true, animated: false)
+        self.navigationController?.popViewController(animated: true)
+        
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        self.delegate?.didCancelEmbededController()
+        self.navigationController?.dismiss(animated: true, completion: nil)
+    }
+    
+    func didCancelController() {
+    self.navigationController?.popToRootViewController(animated: true)
+      presentImagePicker()
+             
     }
     
 }

@@ -6,8 +6,9 @@
 //  Copyright © 2017 Prynt. All rights reserved.
 //
 
-import AVFoundation
+
 import UIKit
+import Photos
 
 public protocol TrimmerViewDelegate: class {
     func didChangePositionBar(_ playerTime: CMTime)
@@ -179,7 +180,7 @@ public protocol TrimmerViewDelegate: class {
 
     private func setupPositionBar() {
 
-        positionBar.frame = CGRect(x: 0, y: 0, width: 3, height: frame.height)
+        positionBar.frame = CGRect(x: 0, y: 0, width: 2, height: frame.height)
         positionBar.backgroundColor = positionBarColor
         positionBar.center = CGPoint(x: leftHandleView.frame.maxX, y: center.y)
         positionBar.layer.cornerRadius = 1
@@ -269,7 +270,7 @@ public protocol TrimmerViewDelegate: class {
         resetHandleViewPosition()
     }
 
-     func resetHandleViewPosition() {
+    private func resetHandleViewPosition() {
         leftConstraint?.constant = 0
         rightConstraint?.constant = 0
         layoutIfNeeded()
@@ -338,6 +339,7 @@ public protocol TrimmerViewDelegate: class {
     }
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateSelectedTime(stoppedMoving: false)
-     //   positionBar.frame.origin.x =   leftHandleView.frame.maxX
+        positionBar.frame.origin.x =   leftHandleView.frame.maxX
     }
 }
+

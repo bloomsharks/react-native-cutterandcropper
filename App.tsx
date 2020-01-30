@@ -42,8 +42,9 @@ const App = () => {
           <Button
             title="yellow button"
             onPress={NativeModules.Presenter.presentImagePicker(
-              'profile',
-              'kuxa',
+              'video',
+              'cover',
+              false,
             ).then(e => console.log(e, 'kaxa'))}
 
             //   {

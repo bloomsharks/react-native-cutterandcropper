@@ -16,6 +16,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A169EF6323E05852000B2137 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A181D2A123CF5BBF00EB1C82 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5329F27815835A9E1A3FD0B6EFF3F3FA;
+			remoteInfo = PryntTrimmerView;
+		};
 		A181D2A723CF5BBF00EB1C82 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A181D2A123CF5BBF00EB1C82 /* Pods.xcodeproj */;
@@ -179,6 +186,7 @@
 				A181D2A823CF5BBF00EB1C82 /* CropViewController.framework */,
 				A181D2AA23CF5BBF00EB1C82 /* TOCropViewControllerBundle.bundle */,
 				A181D2AC23CF5BBF00EB1C82 /* Pods_Cutterandcropper.framework */,
+				A169EF6423E05852000B2137 /* PryntTrimmerView.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -270,6 +278,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		A169EF6423E05852000B2137 /* PryntTrimmerView.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = PryntTrimmerView.framework;
+			remoteRef = A169EF6323E05852000B2137 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		A181D2A823CF5BBF00EB1C82 /* CropViewController.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
