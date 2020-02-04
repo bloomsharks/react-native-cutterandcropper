@@ -112,6 +112,7 @@ public protocol TrimmerViewDelegate: class {
         rightConstraint = trimView.rightAnchor.constraint(equalTo: rightAnchor)
         leftConstraint?.isActive = true
         rightConstraint?.isActive = true
+         
     }
 
     private func setupHandleView() {
@@ -196,7 +197,6 @@ public protocol TrimmerViewDelegate: class {
     }
 
     private func setupGestures() {
-
         let leftPanGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(TrimmerView.handlePanGesture))
         leftHandleView.addGestureRecognizer(leftPanGestureRecognizer)
         let rightPanGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(TrimmerView.handlePanGesture))

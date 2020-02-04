@@ -14,14 +14,17 @@ protocol EmbededControllerDelegate : class {
 }
 
 class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutterDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    
-    
+    func didCutVideo(url: URL) {
+        let alert = UIAlertController(title: "Alert", message: url.absoluteString, preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "ok", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
     
     @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
     private var imageUri : String?
     private var compressionQuality : CGFloat = 0.6
-     var imagePicker = UIImagePickerController()
+    var imagePicker = UIImagePickerController()
     
     
     private let randomInt = Int.random(in: 0..<100000)
@@ -33,11 +36,9 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
     
     override func viewDidLoad() {
         super.viewDidLoad()
-      view.isHidden = true
-      presentImagePicker()
+        view.isHidden = true
+        presentImagePicker()
     }
-    
-    
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
@@ -55,13 +56,15 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
             if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
                 guard skipEditing != true else{
                     self.delegate?.Meta(data: ["uri":videoURL.absoluteString])
+                    
                     return
                 }
                 let videoCutterController = VideoCutterController()
                 videoCutterController.delegate = self
                 videoCutterController.modalPresentationStyle = .fullScreen
-                videoCutterController.url = videoURL.absoluteURL
+                videoCutterController.assetURL = videoURL.absoluteURL
                 self.navigationController?.pushViewController(videoCutterController, animated: true)
+                
             }
         }else{
             if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{
@@ -71,11 +74,6 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
                 self.delegate?.Meta(data: ["uri":videoURL.absoluteString])
             }
         }
-        
-        //    self.image = image
-        
-        //   self.navigationController?.pushViewController(cropController, animated: true)
-        
     }
     
     
@@ -106,29 +104,28 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
     }
     
     func presentImagePicker(){
-                     let imagePicker = UIImagePickerController()
-                     imagePicker.allowsEditing = false
-                     imagePicker.delegate = self
-                     if #available(iOS 11.0, *) {
-                         imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
-                     }
-                    
-                     if mediaType == "photo"{
-                         imagePicker.mediaTypes = ["public.image"]
-                     }else if mediaType == "video"{
-                         imagePicker.mediaTypes = ["public.movie"]
-                     }else{
-                         imagePicker.mediaTypes = ["public.movie","public.image"]
-                     }
-                     
-                     
-                     self.navigationController?.setNavigationBarHidden(true, animated: false)
-                     
-                     imagePicker.willMove(toParent: self.navigationController)
-                     self.navigationController!.addChild(imagePicker)
-                     imagePicker.view.frame = self.view.frame
-                     self.navigationController!.view.addSubview(imagePicker.view)
-                     imagePicker.didMove(toParent: self.navigationController!)
+        let imagePicker = UIImagePickerController()
+        imagePicker.allowsEditing = false
+        imagePicker.delegate = self
+        if #available(iOS 11.0, *) {
+            imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
+        }
+        
+        if mediaType == "photo"{
+            imagePicker.mediaTypes = ["public.image"]
+        }else if mediaType == "video"{
+            imagePicker.mediaTypes = ["public.movie"]
+        }else{
+            imagePicker.mediaTypes = ["public.movie","public.image"]
+        }
+        
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        
+        imagePicker.willMove(toParent: self.navigationController)
+        self.navigationController!.addChild(imagePicker)
+        imagePicker.view.frame = self.view.frame
+        self.navigationController!.view.addSubview(imagePicker.view)
+        imagePicker.didMove(toParent: self.navigationController!)
     }
     
     private func saveImage(image: UIImage) {
@@ -146,7 +143,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
         }
     }
     
-   private func emitMetaData(of image:UIImage){
+    private func emitMetaData(of image:UIImage){
         let height : Any = image.size.height * image.scale
         let width : Any = image.size.width * image.scale
         let fileName : Any = "\(self.randomInt).jpg"
@@ -174,9 +171,9 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
     }
     
     func didCancelController() {
-    self.navigationController?.popToRootViewController(animated: true)
-      presentImagePicker()
-             
+        self.navigationController?.popToRootViewController(animated: true)
+        presentImagePicker()
+        
     }
     
 }

@@ -10,19 +10,20 @@ import AVFoundation
 
 protocol VideoCutterDelegate : class {
     func didCancelController()
+    func didCutVideo(url:URL)
 }
 
 
 class VideoCutterController : UIViewController {
     
+    private let themeColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
     private let trimmerView = TrimmerView()
     private var player: AVPlayer?
     weak var delegate : VideoCutterDelegate?
-    var startTime : CMTime?
-    var endTime : CMTime?
     var playbackTimeCheckerTimer: Timer?
     var trimmerPositionChangedTimer: Timer?
-    var url : URL!
+    var assetURL : URL!
+    private let trimmer = VideoTrimmer()
     
     private var leftMaskView: UIView = {
         let leftMaskView = UIView(frame: .zero)
@@ -49,9 +50,16 @@ class VideoCutterController : UIViewController {
         return topBar
     }()
     
+    private lazy var resetBtn : UIView = {
+        let resetBtn = UIButton(type: UIButton.ButtonType.system)
+        resetBtn.backgroundColor = themeColor
+        return resetBtn
+    }()
+    
     private let backButton : UIButton = {
-        let backButton = UIButton(frame: .zero)
+        let backButton = UIButton(type: UIButton.ButtonType.system)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
+        backButton.tintColor = .black
         backButton.addTarget(self,
                              action: #selector(didTapBackBtn),
                              for: .touchUpInside)
@@ -59,12 +67,12 @@ class VideoCutterController : UIViewController {
     }()
     
     private let nextButton : UIButton = {
-        let nextButton = UIButton(frame: .zero)
+        let nextButton = UIButton(type: UIButton.ButtonType.system)
         nextButton.setTitle("Next", for: .normal)
         nextButton.setTitleColor(.black, for: .normal)
         nextButton.addTarget(self,
-        action: #selector(didTapNextBtn),
-        for: .touchUpInside)
+                             action: #selector(didTapNextBtn),
+                             for: .touchUpInside)
         return nextButton
     }()
     
@@ -82,12 +90,12 @@ class VideoCutterController : UIViewController {
         
         self.view.backgroundColor = .white
         trimmerView.delegate = self
-        trimmerView.mainColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
+        trimmerView.mainColor = themeColor
         trimmerView.handleColor = .white
         
         DispatchQueue.main.asyncAfter(deadline:.now() + 0.2) {
-            self.trimmerView.asset = AVAsset(url: self.url)
-            self.addVideoPlayer(with: AVAsset(url: self.url!), playerView: self.playerView)
+            self.trimmerView.asset = AVAsset(url: self.assetURL)
+            self.addVideoPlayer(with: AVAsset(url: self.assetURL!), playerView: self.playerView)
             self.topBar.dropShadow()
         }
     }
@@ -95,6 +103,7 @@ class VideoCutterController : UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         layout()
+        
     }
     
     
@@ -171,16 +180,36 @@ class VideoCutterController : UIViewController {
     
     @objc func didTapBackBtn(){
         self.delegate?.didCancelController()
+        self.player?.pause()
     }
     
+    
     @objc func didTapNextBtn(){
-        self.trimmerView.resetTrimmerView()
-//        VideoCutter.cropVideo(sourceURL: self.url, startTime: self.startTime!.seconds, endTime: self.endTime!.seconds,completion: {
-//            url in print(AVAsset(url: url).duration.seconds)
-            
-            
-      //  })
+      //  self.trimmerView.resetTrimmerView()
+      
+        print(self.trimmerView.startTime!.seconds ,"-", self.trimmerView.endTime!.seconds,"hey")
         
+        trimmer.trimVideo(sourceURL: self.assetURL,
+                          destinationURL: getDocumentsDirectory().appendingPathComponent("kaxa.mp4"),
+                          trimPoints: [(trimmerView.startTime!,trimmerView.endTime!)],completion: { (e) in
+                            let url = self.getDocumentsDirectory().appendingPathComponent("kaxa.mp4")
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                                let asset = AVAsset(url: url)
+                                let playerItem = AVPlayerItem(asset: asset)
+                                self.player?.replaceCurrentItem(with: playerItem)
+                                self.trimmerView.asset = asset
+                                print(asset.duration.seconds,"hey")
+                                self.player!.play()
+                            })
+        })
+    }
+    
+    func getDocumentsDirectory() -> URL {
+        // find all possible documents directories for this user
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        
+        // just send back the first one, which ought to be the only one
+        return paths[0]
     }
     
     private func addVideoPlayer(with asset: AVAsset, playerView: UIView) {
@@ -232,8 +261,6 @@ class VideoCutterController : UIViewController {
             trimmerView.seek(to: startTime)
         }
     }
-    
-    
 }
 
 extension VideoCutterController: TrimmerViewDelegate {
@@ -247,10 +274,6 @@ extension VideoCutterController: TrimmerViewDelegate {
         stopPlaybackTimeChecker()
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
-        let duration = (trimmerView.endTime! - trimmerView.startTime!).seconds
-        self.startTime = trimmerView.startTime!
-        self.endTime = trimmerView.endTime!
-        print(duration)
     }
 }
 
