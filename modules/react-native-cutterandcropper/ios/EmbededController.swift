@@ -20,7 +20,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
         alert.addAction(UIAlertAction(title: "ok", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
-    
+    //
     @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
     private var imageUri : String?
