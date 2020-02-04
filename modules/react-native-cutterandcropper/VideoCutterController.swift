@@ -182,6 +182,7 @@ class VideoCutterController : UIViewController {
     @objc func didTapBackBtn(){
         self.delegate?.didCancelController()
         self.player?.pause()
+        
     }
     
     
@@ -198,7 +199,9 @@ class VideoCutterController : UIViewController {
                             if error == nil {
                                 self?.delegate?.didCutVideo(url: destinationURL)
                             }
+                         
         })
+        
     }
     
     func getDocumentsDirectory() -> URL {

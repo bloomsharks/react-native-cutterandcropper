@@ -16,9 +16,11 @@ protocol EmbededControllerDelegate : class {
 class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutterDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     func didCutVideo(url: URL) {
-        self.delegate?.Meta(data: ["uri":url])
+        DispatchQueue.main.async {[weak self] in
+             self?.delegate?.Meta(data: ["uri": url.absoluteString])
+        }
     }
-    //
+
     @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
     private var imageUri : String?
