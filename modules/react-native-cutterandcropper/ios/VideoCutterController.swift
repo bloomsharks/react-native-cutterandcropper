@@ -1,9 +1,3 @@
-//
-//  VideoCutterController.swift
-//  DoubleConversion
-//
-//  Created by Nika Samadashvili on Jan/28/20.
-//
 
 import UIKit
 import AVFoundation
@@ -24,6 +18,7 @@ class VideoCutterController : UIViewController {
     var trimmerPositionChangedTimer: Timer?
     var assetURL : URL!
     private let trimmer = VideoTrimmer()
+    private var randomInt = Int.random(in: 0...1000000)
     
     private var leftMaskView: UIView = {
         let leftMaskView = UIView(frame: .zero)
@@ -93,7 +88,7 @@ class VideoCutterController : UIViewController {
         trimmerView.mainColor = themeColor
         trimmerView.handleColor = .white
         
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.2) {
+        DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {
             self.trimmerView.asset = AVAsset(url: self.assetURL)
             self.addVideoPlayer(with: AVAsset(url: self.assetURL!), playerView: self.playerView)
             self.topBar.dropShadow()
@@ -181,27 +176,26 @@ class VideoCutterController : UIViewController {
     @objc func didTapBackBtn(){
         self.delegate?.didCancelController()
         self.player?.pause()
+        
     }
     
     
     @objc func didTapNextBtn(){
-      //  self.trimmerView.resetTrimmerView()
-      
-        print(self.trimmerView.startTime!.seconds ,"-", self.trimmerView.endTime!.seconds,"hey")
+        //  self.trimmerView.resetTrimmerView()
+        
+        let startTime = trimmerView.startTime!
+        let endTime = trimmerView.endTime!
+        let destinationURL = getDocumentsDirectory().appendingPathComponent("\(randomInt).mp4")
         
         trimmer.trimVideo(sourceURL: self.assetURL,
-                          destinationURL: getDocumentsDirectory().appendingPathComponent("kaxa.mp4"),
-                          trimPoints: [(trimmerView.startTime!,trimmerView.endTime!)],completion: { (e) in
-                            let url = self.getDocumentsDirectory().appendingPathComponent("kaxa.mp4")
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                                let asset = AVAsset(url: url)
-                                let playerItem = AVPlayerItem(asset: asset)
-                                self.player?.replaceCurrentItem(with: playerItem)
-                                self.trimmerView.asset = asset
-                                print(asset.duration.seconds,"hey")
-                                self.player!.play()
-                            })
+                          destinationURL: destinationURL,
+                          trimPoints: [(startTime,endTime)],completion: {[weak self] (error) in
+                            if error == nil {
+                                self?.delegate?.didCutVideo(url: destinationURL)
+                            }
+                         
         })
+        
     }
     
     func getDocumentsDirectory() -> URL {
@@ -290,4 +284,3 @@ extension UIView {
         
     }
 }
-
