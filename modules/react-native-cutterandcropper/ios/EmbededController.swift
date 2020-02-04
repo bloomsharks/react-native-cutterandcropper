@@ -15,6 +15,7 @@ protocol EmbededControllerDelegate : class {
 
 class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutterDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func didCutVideo(url: URL) {
+        
         let alert = UIAlertController(title: "Alert", message: url.absoluteString, preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "ok", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
