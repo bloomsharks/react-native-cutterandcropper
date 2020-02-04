@@ -18,7 +18,7 @@ class EmbededController : UIViewController,CropViewControllerDelegate,VideoCutte
     func didCutVideo(url: URL) {
         self.delegate?.Meta(data: ["uri":url])
     }
-    
+    //
     @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
     private var imageUri : String?
