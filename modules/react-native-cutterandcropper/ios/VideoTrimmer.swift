@@ -4,7 +4,7 @@ import Foundation
 import UIKit
 
 class VideoTrimmer {
-    typealias TrimCompletion = (Error?) -> ()
+    typealias TrimCompletion = (Error?,URL?,CGSize?) -> ()
     typealias TrimPoints = [(CMTime, CMTime)]
     
     func verifyPresetForAsset(preset: String, asset: AVAsset) -> Bool {
@@ -37,7 +37,7 @@ class VideoTrimmer {
         ]
         
         let asset = AVURLAsset(url: sourceURL, options: options)
-        let preferredPreset = AVAssetExportPresetPassthrough
+        let preferredPreset = AVAssetExportPresetMediumQuality
         
         if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
             
@@ -47,8 +47,11 @@ class VideoTrimmer {
             
             guard let assetVideoTrack: AVAssetTrack = asset.tracks(withMediaType: .video).first else { return }
             guard let assetAudioTrack: AVAssetTrack = asset.tracks(withMediaType: .audio).first else { return }
-
+           
+            
             videoCompTrack!.preferredTransform = assetVideoTrack.preferredTransform
+            
+            let videoSize : CGSize = assetVideoTrack.naturalSize.applying(assetVideoTrack.preferredTransform)
             
             var accumulatedTime = CMTime.zero
             for (startTimeForCurrentSlice, endTimeForCurrentSlice) in trimPoints {
@@ -62,7 +65,7 @@ class VideoTrimmer {
                 }
                 catch let compError {
                     print("TrimVideo: error during composition: \(compError)")
-                    completion?(compError)
+                    completion?(compError,nil,nil)
                 }
             }
             
@@ -75,14 +78,14 @@ class VideoTrimmer {
             removeFileAtURLIfExists(url: destinationURL as URL)
             
             exportSession.exportAsynchronously {
-                completion?(exportSession.error)
+                completion?(exportSession.error,destinationURL,videoSize)
                 
             }
         }
         else {
             print("TrimVideo - Could not find a suitable export preset for the input video")
             let error = NSError(domain: "com.bighug.ios", code: -1, userInfo: nil)
-            completion?(error)
+            completion?(error,nil,nil)
         }
     }
 }

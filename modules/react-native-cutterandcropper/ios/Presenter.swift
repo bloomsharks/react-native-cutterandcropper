@@ -12,11 +12,11 @@ import UIKit
 
 
 @objc(Presenter)
-class Presenter : NSObject, EmbededControllerDelegate{
+final class Presenter : NSObject{
     
     var resolver: RCTPromiseResolveBlock!
     
-    @objc func presentImagePicker(_ mediaType: String, proportion: String, skip:Bool, resolver resolve: @escaping RCTPromiseResolveBlock,
+    @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping RCTPromiseResolveBlock,
                                   rejecter reject: @escaping RCTPromiseRejectBlock){
         
         DispatchQueue.main.async {[weak self] in
@@ -24,7 +24,7 @@ class Presenter : NSObject, EmbededControllerDelegate{
             
             let embededController = EmbededController()
             embededController.delegate = self
-            embededController.imageType = proportion
+            embededController.property = property
             embededController.mediaType = mediaType
             embededController.skipEditing = skip
             
@@ -42,10 +42,11 @@ class Presenter : NSObject, EmbededControllerDelegate{
         }
     }
     
-    
-    func Meta(data: [String : Any]) {
+}
+
+extension Presenter : EmbededControllerDelegate{
+    func emitMeta(data: [String : Any]) {
         self.resolver(data)
         RCTPresentedViewController()?.dismiss(animated: true, completion: nil)
     }
-    
 }
