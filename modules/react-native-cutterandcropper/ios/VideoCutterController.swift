@@ -219,9 +219,10 @@ final class VideoCutterController : UIViewController {
                         self.saveImage(image: image)
                         
                         let thumbnail : String = self.thumbnailImageUri
-                        let mimeType : Any = "video/mp4"
+                        let mimeType : String = "video/mp4"
+                        let fileName : String = "\(self.randomInt).mp4"
                         
-                        self.delegate?.didfinishWith(data: ["width":size.width,"height":size.height,"uri": url.absoluteString,"thumbnail": thumbnail, "mimetype":mimeType,"isTemporary":true])
+                        self.delegate?.didfinishWith(data: ["width":size.width,"height":size.height,"uri": url.absoluteString,"thumbnail": thumbnail, "type":mimeType,"isTemporary":true,"fileName":fileName])
                     }catch{
                         self.delegate?.didfinishWith(error: ["error":error])
                     }

@@ -72,7 +72,7 @@ class VideoTrimmer {
             guard let exportSession = AVAssetExportSession(asset: composition, presetName: preferredPreset) else { return }
             
             exportSession.outputURL = destinationURL as URL
-            exportSession.outputFileType = AVFileType.m4v
+            exportSession.outputFileType = AVFileType.mp4
             exportSession.shouldOptimizeForNetworkUse = true
             
             removeFileAtURLIfExists(url: destinationURL as URL)
