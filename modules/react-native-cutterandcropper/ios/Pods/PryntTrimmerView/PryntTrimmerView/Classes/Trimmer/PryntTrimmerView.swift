@@ -13,6 +13,7 @@ import Photos
 public protocol TrimmerViewDelegate: class {
     func didChangePositionBar(_ playerTime: CMTime)
     func positionBarStoppedMoving(_ playerTime: CMTime)
+    func didChangeHandleBarPosition(StartTime:CMTime,EndTime:CMTime)
 }
 
 /// A view to select a specific time range of a video. It consists of an asset preview with thumbnails inside a scroll view, two
@@ -118,7 +119,6 @@ public protocol TrimmerViewDelegate: class {
         rightConstraint = trimView.rightAnchor.constraint(equalTo: rightAnchor)
         leftConstraint?.isActive = true
         rightConstraint?.isActive = true
-        
     }
     
     private func setupHandleView() {
@@ -192,6 +192,11 @@ public protocol TrimmerViewDelegate: class {
         rightHandleLabel.textColor = .black
         leftHandleLabelLine.backgroundColor = .black
         rightHandleLabelLine.backgroundColor = .black
+        
+        leftHandleLabelLine.isHidden = true
+        rightHandleLabelLine.isHidden = true
+        leftHandleLabel.isHidden = true
+        rightHandleLabel.isHidden = true
         
         addSubview(leftHandleLabelLine)
         self.leftHandleLabelLine.translatesAutoresizingMaskIntoConstraints = false
@@ -287,6 +292,7 @@ public protocol TrimmerViewDelegate: class {
         leftHandleView.addGestureRecognizer(leftPanGestureRecognizer)
         let rightPanGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(TrimmerView.handlePanGesture))
         rightHandleView.addGestureRecognizer(rightPanGestureRecognizer)
+        
     }
     
     private func updateMainColor() {
@@ -308,11 +314,15 @@ public protocol TrimmerViewDelegate: class {
             let superView = gestureRecognizer.view?.superview else { return }
         let isLeftGesture = view == leftHandleView
         switch gestureRecognizer.state {
-            
         case .began:
+       
             if isLeftGesture {
+                leftHandleLabel.isHidden = false
+                leftHandleLabelLine.isHidden = false
                 currentLeftConstraint = leftConstraint!.constant
             } else {
+                rightHandleLabel.isHidden = false
+                rightHandleLabelLine.isHidden = false
                 currentRightConstraint = rightConstraint!.constant
             }
             updateSelectedTime(stoppedMoving: false)
@@ -330,12 +340,18 @@ public protocol TrimmerViewDelegate: class {
                 seek(to: endTime)
             }
             updateSelectedTime(stoppedMoving: false)
-            
+              self.delegate?.didChangeHandleBarPosition(StartTime: startTime!, EndTime: endTime!)
         case .cancelled, .ended, .failed:
+            leftHandleLabel.isHidden = true
+            leftHandleLabelLine.isHidden = true
+            rightHandleLabel.isHidden = true
+            rightHandleLabelLine.isHidden = true
+              self.delegate?.didChangeHandleBarPosition(StartTime: startTime!, EndTime: endTime!)
             updateSelectedTime(stoppedMoving: true)
         default: break
         }
     }
+    
     
     private func updateLeftConstraint(with translation: CGPoint) {
         let maxConstraint = max(rightHandleView.frame.origin.x - handleWidth - minimumDistanceBetweenHandle, 0)
@@ -435,7 +451,10 @@ public protocol TrimmerViewDelegate: class {
     }
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateSelectedTime(stoppedMoving: false)
-        positionBar.frame.origin.x =  leftHandleView.frame.maxX
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.positionBar.frame.origin.x = self.leftHandleView.frame.maxX
+        }
+       
     }
 }
 

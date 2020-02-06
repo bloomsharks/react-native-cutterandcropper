@@ -57,12 +57,13 @@ final class VideoCutterController : UIViewController {
         return topBar
     }()
     
-    //    private var resetBtn : UIView = {
-    //        let resetBtn = UIButton(type: UIButton.ButtonType.system)
-    //        resetBtn.backgroundColor = themeColor
-    //
-    //        return resetBtn
-    //    }()
+    private var resetBtn : UIButton = {
+            let resetBtn = UIButton(type: UIButton.ButtonType.system)
+            resetBtn.setTitle("Reset", for: .normal)
+            resetBtn.setTitleColor(.white, for: .normal)
+            resetBtn.layer.cornerRadius = 6
+            return resetBtn
+        }()
     
     private let backButton : UIButton = {
         let backButton = UIButton(type: UIButton.ButtonType.system)
@@ -78,6 +79,12 @@ final class VideoCutterController : UIViewController {
         return nextButton
     }()
     
+    private let videoDurationLabel : UILabel = {
+        let videoDurationLabel = UILabel(frame: .zero)
+        videoDurationLabel.font = UIFont.systemFont(ofSize: 13)
+               videoDurationLabel.textColor = .black
+               return videoDurationLabel
+    }()
     
     private let titleLabel : UILabel = {
         let title = UILabel(frame: .zero)
@@ -97,33 +104,38 @@ final class VideoCutterController : UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = .white
         trimmerView.delegate = self
-        trimmerView.mainColor = themeColor
         trimmerView.handleColor = .white
         trimmerView.maxDuration = videoMaxDuration
+        trimmerView.mainColor = themeColor
+        resetBtn.backgroundColor = themeColor
+        nextButton.setTitleColor(themeColor, for: .normal)
+        
         nextButton.addTarget(self,action: #selector(didTapNextBtn),for: .touchUpInside)
         backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
-        
-    }
-    
-    deinit{
-        print("vasha")
+        resetBtn.addTarget(self,action: #selector(didTapResetBtn),for: .touchUpInside)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         layout()
-        
+        setupVideoRelatedStuff()
+    }
+    
+   
+    private func setupVideoRelatedStuff(){
         DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {[weak self] in
             if let self = self, let assetURL = self.assetURL,let url = URL(string: assetURL) {
                 self.trimmerView.asset = AVAsset(url: url)
                 self.addVideoPlayer(with: AVAsset(url: url), playerView: self.playerView)
                 self.topBar.dropShadow()
-                print(self.trimmerView.startTime?.seconds as Any)
-                print(self.trimmerView.endTime?.seconds as Any)
-                
+                let startTime = self.trimmerView.startTime ?? CMTime.zero
+                let endTime = self.trimmerView.endTime ?? CMTime.zero
+                let videoDurationLabelText = self.generateDurationTextFrom(startTime: startTime, endTime: endTime)
+                self.videoDurationLabel.text = videoDurationLabelText
             }
         }
     }
+    
     
     private func layout(){
         self.view.addSubview(trimmerView)
@@ -132,6 +144,9 @@ final class VideoCutterController : UIViewController {
         self.view.addSubview(rightMaskView)
         self.view.addSubview(topBar)
         self.view.addSubview(activityIndicator)
+        self.view.addSubview(videoDurationLabel)
+        self.view.addSubview(resetBtn)
+        
         
         topBar.addSubview(backButton)
         topBar.addSubview(titleLabel)
@@ -169,19 +184,23 @@ final class VideoCutterController : UIViewController {
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.titleLabel.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
         self.titleLabel.centerXAnchor.constraint(equalTo: topBar.centerXAnchor).isActive = true
-        self.titleLabel.widthAnchor.constraint(equalToConstant: 70).isActive = true
+        self.titleLabel.widthAnchor.constraint(equalToConstant: 60).isActive = true
         self.titleLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         self.playerView.translatesAutoresizingMaskIntoConstraints = false
         self.playerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         self.playerView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-        self.playerView.heightAnchor.constraint(equalToConstant: 350).isActive = true
+        self.playerView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4).isActive = true
         self.playerView.topAnchor.constraint(equalTo: topBar.bottomAnchor).isActive = true
+        
+        self.videoDurationLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.videoDurationLabel.topAnchor.constraint(equalTo: playerView.bottomAnchor,constant: 12).isActive = true
+        self.videoDurationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         
         self.trimmerView.translatesAutoresizingMaskIntoConstraints = false
         self.trimmerView.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 16).isActive = true
         self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
-        self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 70).isActive = true
+        self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 60).isActive = true
         self.trimmerView.heightAnchor.constraint(equalToConstant: 45).isActive = true
         
         self.leftMaskView.translatesAutoresizingMaskIntoConstraints = false
@@ -200,7 +219,17 @@ final class VideoCutterController : UIViewController {
         self.activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
         self.activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
         self.activityIndicator.heightAnchor.constraint(equalToConstant: 100).isActive = true
-          self.activityIndicator.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        self.activityIndicator.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        
+        self.resetBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.resetBtn.topAnchor.constraint(equalTo: trimmerView.bottomAnchor, constant: 50).isActive = true
+        self.resetBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        self.resetBtn.heightAnchor.constraint(equalToConstant: 35).isActive = true
+        self.resetBtn.widthAnchor.constraint(equalToConstant: 90).isActive = true
+    }
+    
+    @objc func didTapResetBtn(){
+        self.trimmerView.resetTrimmerView()
     }
     
     @objc func didTapBackBtn(){
@@ -212,23 +241,25 @@ final class VideoCutterController : UIViewController {
     @objc func didTapNextBtn(){
         self.activityIndicator.isHidden = false
         self.activityIndicator.startAnimating()
-        //  self.trimmerView.resetTrimmerView()
+        self.nextButton.isUserInteractionEnabled = false
+       
         stopPlaybackTimeChecker()
         let url = URL(string: self.assetURL)
         let startTime = trimmerView.startTime!
         let endTime = trimmerView.endTime!
         let destinationURL = createTemporaryDirectory().appendingPathComponent("\(randomInt).mp4")
         
-        videoTrimmer.trimVideo(sourceURL: url!, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {[weak self] (error,url,size) in
+        videoTrimmer.trimVideo(sourceURL: url!, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {
+            [weak self] (error, url, size) in
             if error == nil, let url = url, let size = size{
                 DispatchQueue.main.async {[weak self] in
                     guard let self = self else {return}
+                   
                     let cuttedAsset = AVAsset(url:url)
-                    let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
+                     let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
                     let cgImage : CGImage?
                     do{
                          cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
-                        
                         let image = UIImage(cgImage: cgImage!)
                         self.saveImage(image: image)
                         
@@ -313,9 +344,34 @@ final class VideoCutterController : UIViewController {
             trimmerView.seek(to: startTime)
         }
     }
+    
+    private func generateDurationTextFrom(startTime:CMTime,endTime:CMTime) -> (String) {
+        let secondsInDuration = endTime.seconds - startTime.seconds
+        let secondsRounded = Int(secondsInDuration)
+          
+           let minutes : String!
+           if (secondsRounded % 3600)/60 < 10 && (secondsRounded % 3600)/60 > 0{
+               minutes = "0\((secondsRounded % 3600)/60)"
+           }else{
+               minutes = "\((secondsRounded % 3600)/60)"
+           }
+           let seconds : String!
+           if (secondsRounded % 3600) % 60 < 10 {
+               seconds = "0\((secondsRounded % 3600) % 60)"
+           }else{
+               seconds = "\((secondsRounded % 3600) % 60)"
+           }
+        return "Duration \(minutes ?? "0"):\(seconds ?? "00") min"
+           }
+    
 }
 
 extension VideoCutterController: TrimmerViewDelegate {
+    func didChangeHandleBarPosition(StartTime: CMTime, EndTime: CMTime) {
+         let videoDurationLabelText = self.generateDurationTextFrom(startTime: StartTime, endTime: EndTime)
+                    self.videoDurationLabel.text = videoDurationLabelText
+    }
+    
     func positionBarStoppedMoving(_ playerTime: CMTime) {
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
         player?.play()
@@ -327,12 +383,9 @@ extension VideoCutterController: TrimmerViewDelegate {
         stopPlaybackTimeChecker()
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
-        print(trimmerView.startTime ?? CMTime.zero,trimmerView.endTime ?? CMTime.zero)
     }
     
 }
-
-
 
 
 extension UIView {
