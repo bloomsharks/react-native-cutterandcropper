@@ -11,14 +11,17 @@ import AVFoundation
 
 protocol VideoCutterDelegate : class {
     func didCancelController()
-    func didCutVideoWith(data:[String:Any])
+    func didfinishWith(data:[String:Any])
+    func didfinishWith(error:[String:Error])
 }
 
 
 final class VideoCutterController : UIViewController {
     weak var delegate : VideoCutterDelegate?
+    
     private var playbackTimeCheckerTimer: Timer?
-    var assetURL : URL!
+    
+    var assetURL : String!
     var videoMaxDuration : Double = 90
     
     private let themeColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
@@ -26,7 +29,8 @@ final class VideoCutterController : UIViewController {
     private let trimmerView = TrimmerView()
     private let videoTrimmer = VideoTrimmer()
     private var randomInt = Int.random(in: 0...1000000)
-    
+    private var thumbnailImageUri : String!
+    private var thumbNailImageCompressionQuality : CGFloat = 0.6
     
     private var leftMaskView: UIView = {
         let leftMaskView = UIView(frame: .zero)
@@ -53,29 +57,24 @@ final class VideoCutterController : UIViewController {
         return topBar
     }()
     
-    private lazy var resetBtn : UIView = {
-        let resetBtn = UIButton(type: UIButton.ButtonType.system)
-        resetBtn.backgroundColor = themeColor
-        return resetBtn
-    }()
+    //    private var resetBtn : UIView = {
+    //        let resetBtn = UIButton(type: UIButton.ButtonType.system)
+    //        resetBtn.backgroundColor = themeColor
+    //
+    //        return resetBtn
+    //    }()
     
     private let backButton : UIButton = {
         let backButton = UIButton(type: UIButton.ButtonType.system)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
         backButton.tintColor = .black
-        backButton.addTarget(self,
-                             action: #selector(didTapBackBtn),
-                             for: .touchUpInside)
         return backButton
     }()
     
     private let nextButton : UIButton = {
         let nextButton = UIButton(type: UIButton.ButtonType.system)
         nextButton.setTitle("Next", for: .normal)
-        nextButton.setTitleColor(.black, for: .normal)
-        nextButton.addTarget(self,
-                             action: #selector(didTapNextBtn),
-                             for: .touchUpInside)
+        nextButton.tintColor = .black
         return nextButton
     }()
     
@@ -95,18 +94,30 @@ final class VideoCutterController : UIViewController {
         trimmerView.mainColor = themeColor
         trimmerView.handleColor = .white
         trimmerView.maxDuration = videoMaxDuration
+        nextButton.addTarget(self,action: #selector(didTapNextBtn),for: .touchUpInside)
+        backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
         
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    deinit{
+        print("vasha")
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         layout()
         
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {
-                  self.trimmerView.asset = AVAsset(url: self.assetURL)
-                  self.addVideoPlayer(with: AVAsset(url: self.assetURL!), playerView: self.playerView)
-                  self.topBar.dropShadow()
-              }
+        DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {[weak self] in
+            if let self = self, let assetURL = self.assetURL,let url = URL(string: assetURL) {
+                self.trimmerView.asset = AVAsset(url: url)
+                self.addVideoPlayer(with: AVAsset(url: url), playerView: self.playerView)
+                self.topBar.dropShadow()
+                print(self.trimmerView.startTime?.seconds as Any)
+                print(self.trimmerView.endTime?.seconds as Any)
+                
+            }
+        }
+        
     }
     
     private func layout(){
@@ -189,24 +200,58 @@ final class VideoCutterController : UIViewController {
     @objc func didTapNextBtn(){
         //  self.trimmerView.resetTrimmerView()
         stopPlaybackTimeChecker()
-        
+        let url = URL(string: self.assetURL)
         let startTime = trimmerView.startTime!
         let endTime = trimmerView.endTime!
         let destinationURL = createTemporaryDirectory().appendingPathComponent("\(randomInt).mp4")
         
-        videoTrimmer.trimVideo(sourceURL: self.assetURL, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {[weak self] (error,url,size) in
+        videoTrimmer.trimVideo(sourceURL: url!, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {[weak self] (error,url,size) in
             if error == nil, let url = url, let size = size{
                 DispatchQueue.main.async {[weak self] in
-                    self?.delegate?.didCutVideoWith(data: ["width":size.width,"height":size.height,"uri": url.absoluteString])
+                    guard let self = self else {return}
+                    let cuttedAsset = AVAsset(url:url)
+                    let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
+                    let cgImage : CGImage?
+                    do{
+                         cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
+                        
+                        let image = UIImage(cgImage: cgImage!)
+                        self.saveImage(image: image)
+                        
+                        let thumbnail : String = self.thumbnailImageUri
+                        let mimeType : Any = "video/mp4"
+                        
+                        self.delegate?.didfinishWith(data: ["width":size.width,"height":size.height,"uri": url.absoluteString,"thumbnail": thumbnail, "mimetype":mimeType,"isTemporary":true])
+                    }catch{
+                        self.delegate?.didfinishWith(error: ["error":error])
+                    }
                 }
+            }else{
+                self?.delegate?.didfinishWith(error: ["error":error!])
             }
         })
     }
     
-   private func createTemporaryDirectory() -> URL {
-           let url = URL(fileURLWithPath: NSTemporaryDirectory())
-           return url
-       }
+    private func saveImage(image: UIImage) {
+        let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
+        
+        let targetURL = tempDirectoryURL.appendingPathComponent("\(randomInt).jpg")
+        
+        if let data = image.jpegData(compressionQuality: thumbNailImageCompressionQuality) {
+            do {
+                try data.write(to: targetURL)
+                self.thumbnailImageUri = targetURL.absoluteString
+            } catch let error {
+                self.delegate?.didfinishWith(error: ["error":error])
+            }
+        }
+    }
+    
+    
+    private func createTemporaryDirectory() -> URL {
+        let url = URL(fileURLWithPath: NSTemporaryDirectory())
+        return url
+    }
     
     private func addVideoPlayer(with asset: AVAsset, playerView: UIView) {
         let playerItem = AVPlayerItem(asset: asset)
@@ -257,6 +302,7 @@ extension VideoCutterController: TrimmerViewDelegate {
     func positionBarStoppedMoving(_ playerTime: CMTime) {
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
         player?.play()
+        
         startPlaybackTimeChecker()
     }
     
@@ -264,8 +310,13 @@ extension VideoCutterController: TrimmerViewDelegate {
         stopPlaybackTimeChecker()
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
+        print(trimmerView.startTime ?? CMTime.zero,trimmerView.endTime ?? CMTime.zero)
     }
+    
 }
+
+
+
 
 extension UIView {
     func dropShadow() {

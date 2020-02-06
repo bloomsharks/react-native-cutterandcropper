@@ -11,19 +11,21 @@ import AVFoundation
 
 protocol EmbededControllerDelegate : class {
     func emitMeta(data: [String:Any])
+    func emitMeta(error:[String:Error])
 }
 
 final class EmbededController : UIViewController{
+    var imagePicker : UIImagePickerController!
     
-    @objc var onDone: RCTDirectEventBlock?
     private var image : UIImage?
-    private var imageUri : String?
+    private var imageUri : String? 
     private var compressionQuality : CGFloat = 0.6
     
     private let randomInt = Int.random(in: 0..<100000)
     var property : String!
     var mediaType : String!
     var skipEditing : Bool!
+    
     
     weak var delegate : EmbededControllerDelegate?
     
@@ -59,20 +61,21 @@ final class EmbededController : UIViewController{
         return cropController
     }
     
-    private func setupVideoCutterController(with videoURL: URL) -> VideoCutterController{
+    deinit{
+        imagePicker.removeFromParent()
+    }
+    
+    private func setupVideoCutterController(with videoURL: String) -> VideoCutterController{
         let videoMaxDuration = Double(property) ?? 90
         let videoCutterController = VideoCutterController()
-       
         videoCutterController.delegate = self
-        videoCutterController.modalPresentationStyle = .fullScreen
-        videoCutterController.assetURL = videoURL.absoluteURL
+        videoCutterController.assetURL = videoURL
         videoCutterController.videoMaxDuration = videoMaxDuration
-        
         return videoCutterController
     }
     
     private func presentImagePicker(){
-        let imagePicker = UIImagePickerController()
+        imagePicker = UIImagePickerController()
         imagePicker.allowsEditing = false
         imagePicker.delegate = self
         if #available(iOS 11.0, *) {
@@ -93,6 +96,7 @@ final class EmbededController : UIViewController{
         self.navigationController!.view.addSubview(imagePicker.view)
         imagePicker.didMove(toParent: self.navigationController!)
     }
+    
     
     private func saveImage(image: UIImage) {
         let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
@@ -124,8 +128,17 @@ final class EmbededController : UIViewController{
 }
 
 extension EmbededController : VideoCutterDelegate {
-    func didCutVideoWith(data: [String : Any]) {
-        self.delegate?.emitMeta(data: data)
+    
+    func didfinishWith(error: [String : Error]) {
+        self.navigationController?.dismiss(animated: false, completion: {
+              self.delegate?.emitMeta(error: error)
+        })
+    }
+    
+    func didfinishWith(data: [String : Any]) {
+        self.navigationController?.dismiss(animated: false, completion: {
+            self.delegate?.emitMeta(data: data)
+        })
     }
     
     func didCancelController() {
@@ -147,6 +160,7 @@ extension EmbededController : CropViewControllerDelegate{
 }
 
 extension EmbededController :  UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         self.navigationController?.dismiss(animated: true, completion: nil)
     }
@@ -169,9 +183,8 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
                     self.delegate?.emitMeta(data: ["uri":videoURL.absoluteString])
                     return
                 }
-                let videoCutterController = setupVideoCutterController(with: videoURL)
+                let videoCutterController = setupVideoCutterController(with: videoURL.absoluteString)
                 self.navigationController?.pushViewController(videoCutterController, animated: true)
-                
             }
         }else{
             if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{

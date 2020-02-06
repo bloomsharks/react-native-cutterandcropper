@@ -15,6 +15,7 @@ import UIKit
 final class Presenter : NSObject{
     
     var resolver: RCTPromiseResolveBlock!
+    var rejecter: RCTPromiseRejectBlock!
     
     @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping RCTPromiseResolveBlock,
                                   rejecter reject: @escaping RCTPromiseRejectBlock){
@@ -34,6 +35,7 @@ final class Presenter : NSObject{
             let curentViewController = RCTPresentedViewController()
             curentViewController!.present(navigationController, animated: true, completion: nil)
             self.resolver = resolve
+            self.rejecter = reject
             
             guard #available(iOS 12, *) else{
                 return
@@ -45,6 +47,10 @@ final class Presenter : NSObject{
 }
 
 extension Presenter : EmbededControllerDelegate{
+    func emitMeta(error: [String : Error]) {
+        self.rejecter("error", error["error"]?.localizedDescription ,error["error"])
+    }
+    
     func emitMeta(data: [String : Any]) {
         self.resolver(data)
         RCTPresentedViewController()?.dismiss(animated: true, completion: nil)

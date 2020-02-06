@@ -7,12 +7,12 @@ class VideoTrimmer {
     typealias TrimCompletion = (Error?,URL?,CGSize?) -> ()
     typealias TrimPoints = [(CMTime, CMTime)]
     
-    func verifyPresetForAsset(preset: String, asset: AVAsset) -> Bool {
-        let compatiblePresets = AVAssetExportSession.exportPresets(compatibleWith: asset)
-        let filteredPresets = compatiblePresets.filter { $0 == preset }
-        return filteredPresets.count > 0 || preset == AVAssetExportPresetPassthrough
-    }
-    
+//    func verifyPresetForAsset(preset: String, asset: AVAsset) -> Bool {
+//        let compatiblePresets = AVAssetExportSession.exportPresets(compatibleWith: asset)
+//        let filteredPresets = compatiblePresets.filter { $0 == preset }
+//        return filteredPresets.count > 0 || preset == AVAssetExportPresetPassthrough
+//    }
+//
     func removeFileAtURLIfExists(url: URL) {
         
         let fileManager = FileManager.default
@@ -39,7 +39,7 @@ class VideoTrimmer {
         let asset = AVURLAsset(url: sourceURL, options: options)
         let preferredPreset = AVAssetExportPresetMediumQuality
         
-        if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
+      //  if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
             
             let composition = AVMutableComposition()
             let videoCompTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: CMPersistentTrackID())
@@ -81,11 +81,11 @@ class VideoTrimmer {
                 completion?(exportSession.error,destinationURL,videoSize)
                 
             }
-        }
-        else {
-            print("TrimVideo - Could not find a suitable export preset for the input video")
-            let error = NSError(domain: "com.bighug.ios", code: -1, userInfo: nil)
-            completion?(error,nil,nil)
-        }
+//        }
+//        else {
+//            print("TrimVideo - Could not find a suitable export preset for the input video")
+//            let error = NSError(domain: "com.bighug.ios", code: -1, userInfo: nil)
+//            completion?(error,nil,nil)
+//        }
     }
 }
