@@ -18,6 +18,7 @@ final class EmbededController : UIViewController{
     var imagePicker : UIImagePickerController!
     
     private var image : UIImage?
+    //it can be picked Image from UIImagePicker as well as videoThumbnail
     private var imageUri : String? 
     private var compressionQuality : CGFloat = 0.6
     
@@ -26,9 +27,7 @@ final class EmbededController : UIViewController{
     var mediaType : String!
     var skipEditing : Bool!
     
-    
     weak var delegate : EmbededControllerDelegate?
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,7 +36,6 @@ final class EmbededController : UIViewController{
     }
     
     private func setupCropController(with image: UIImage) -> CropViewController{
-        
         let cropController = CropViewController(croppingStyle: .default, image: image)
         cropController.modalPresentationStyle = .fullScreen
         cropController.delegate = self
@@ -59,10 +57,6 @@ final class EmbededController : UIViewController{
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
         }
         return cropController
-    }
-    
-    deinit{
-        imagePicker.removeFromParent()
     }
     
     private func setupVideoCutterController(with videoURL: String) -> VideoCutterController{
@@ -113,6 +107,30 @@ final class EmbededController : UIViewController{
         }
     }
     
+    
+    private func emitMetaData(of url:URL){
+        let cuttedAsset = AVAsset(url:url)
+        let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
+        let cgImage : CGImage?
+        do{
+            cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
+            let image = UIImage(cgImage: cgImage!)
+            self.saveImage(image: image)
+            
+            let thumbnailURL : String = imageUri ?? ""
+            let thumbnailImg : UIImage = UIImage(cgImage: cgImage!)
+            let height : Any = abs(thumbnailImg.size.height * image.scale)
+            let width : Any = abs(thumbnailImg.size.width * image.scale)
+            let mimeType : String = "video/mp4"
+            let fileName : String = "\(self.randomInt).mp4"
+            
+            self.delegate?.emitMeta(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnailURL, "type":mimeType,"isTemporary":true,"fileName":fileName])
+        }catch{
+            self.delegate?.emitMeta(error: ["error":error])
+        }
+    }
+    
+    
     private func emitMetaData(of image:UIImage){
         let height : Any = image.size.height * image.scale
         let width : Any = image.size.width * image.scale
@@ -124,6 +142,9 @@ final class EmbededController : UIViewController{
         self.delegate?.emitMeta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
     }
     
+    deinit{
+        imagePicker.removeFromParent()
+    }
     
 }
 
@@ -131,7 +152,7 @@ extension EmbededController : VideoCutterDelegate {
     
     func didfinishWith(error: [String : Error]) {
         self.navigationController?.dismiss(animated: false, completion: {
-              self.delegate?.emitMeta(error: error)
+            self.delegate?.emitMeta(error: error)
         })
     }
     
@@ -180,7 +201,7 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
         }else if mediaType == "video"{
             if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
                 guard skipEditing != true else{
-                    self.delegate?.emitMeta(data: ["uri":videoURL.absoluteString])
+                    self.emitMetaData(of: videoURL)
                     return
                 }
                 let videoCutterController = setupVideoCutterController(with: videoURL.absoluteString)

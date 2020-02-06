@@ -221,8 +221,10 @@ final class VideoCutterController : UIViewController {
                         let thumbnail : String = self.thumbnailImageUri
                         let mimeType : String = "video/mp4"
                         let fileName : String = "\(self.randomInt).mp4"
+                        let height : CGFloat = abs(size.height)
+                        let width : CGFloat = abs(size.width)
                         
-                        self.delegate?.didfinishWith(data: ["width":size.width,"height":size.height,"uri": url.absoluteString,"thumbnail": thumbnail, "type":mimeType,"isTemporary":true,"fileName":fileName])
+                        self.delegate?.didfinishWith(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnail, "type":mimeType,"isTemporary":true,"fileName":fileName])
                     }catch{
                         self.delegate?.didfinishWith(error: ["error":error])
                     }
