@@ -175,7 +175,7 @@ final class VideoCutterController : UIViewController {
         self.trimmerView.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 16).isActive = true
         self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
         self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 70).isActive = true
-        self.trimmerView.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        self.trimmerView.heightAnchor.constraint(equalToConstant: 45).isActive = true
         
         self.leftMaskView.translatesAutoresizingMaskIntoConstraints = false
         self.leftMaskView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
