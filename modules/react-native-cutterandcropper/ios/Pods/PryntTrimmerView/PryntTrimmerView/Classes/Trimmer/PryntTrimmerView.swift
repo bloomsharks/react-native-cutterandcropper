@@ -216,8 +216,6 @@ public protocol TrimmerViewDelegate: class {
         self.rightHandleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.rightHandleLabel.bottomAnchor.constraint(equalTo: self.rightHandleLabelLine.topAnchor,constant: 2).isActive = true
          self.rightHandleLabel.centerXAnchor.constraint(equalTo: self.rightHandleView.centerXAnchor).isActive = true
-        
-        
     }
     
   private func updateHandleLabel(left leftHandleTimeStamp:CMTime? = nil, right rightHandleTimeStamp: CMTime? = nil){

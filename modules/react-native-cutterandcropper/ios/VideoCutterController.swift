@@ -86,6 +86,12 @@ final class VideoCutterController : UIViewController {
         return title
     }()
     
+    private let activityIndicator : UIActivityIndicatorView = {
+        let activityIndicator = UIActivityIndicatorView()
+        activityIndicator.isHidden = true
+        return activityIndicator
+    }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -117,7 +123,6 @@ final class VideoCutterController : UIViewController {
                 
             }
         }
-        
     }
     
     private func layout(){
@@ -126,11 +131,13 @@ final class VideoCutterController : UIViewController {
         self.view.addSubview(leftMaskView)
         self.view.addSubview(rightMaskView)
         self.view.addSubview(topBar)
+        self.view.addSubview(activityIndicator)
         
         topBar.addSubview(backButton)
         topBar.addSubview(titleLabel)
         topBar.addSubview(nextButton)
         
+        view.bringSubviewToFront(activityIndicator)
         view.bringSubviewToFront(leftMaskView)
         view.bringSubviewToFront(rightMaskView)
         
@@ -188,7 +195,12 @@ final class VideoCutterController : UIViewController {
         self.rightMaskView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         self.rightMaskView.topAnchor.constraint(equalTo: trimmerView.topAnchor).isActive = true
         self.rightMaskView.heightAnchor.constraint(equalTo: trimmerView.heightAnchor).isActive = true
-        
+     
+        self.activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        self.activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        self.activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+        self.activityIndicator.heightAnchor.constraint(equalToConstant: 100).isActive = true
+          self.activityIndicator.widthAnchor.constraint(equalToConstant: 100).isActive = true
     }
     
     @objc func didTapBackBtn(){
@@ -198,6 +210,8 @@ final class VideoCutterController : UIViewController {
     
     
     @objc func didTapNextBtn(){
+        self.activityIndicator.isHidden = false
+        self.activityIndicator.startAnimating()
         //  self.trimmerView.resetTrimmerView()
         stopPlaybackTimeChecker()
         let url = URL(string: self.assetURL)
