@@ -17,7 +17,12 @@ final class Presenter : NSObject{
     var resolver: RCTPromiseResolveBlock!
     var rejecter: RCTPromiseRejectBlock!
     
-    @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping RCTPromiseResolveBlock,
+    @objc static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+    
+    @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping
+        RCTPromiseResolveBlock,
                                   rejecter reject: @escaping RCTPromiseRejectBlock){
         
         DispatchQueue.main.async {[weak self] in
@@ -43,6 +48,8 @@ final class Presenter : NSObject{
             RCTKeyWindow()?.backgroundColor = .white
         }
     }
+    
+  
     
 }
 

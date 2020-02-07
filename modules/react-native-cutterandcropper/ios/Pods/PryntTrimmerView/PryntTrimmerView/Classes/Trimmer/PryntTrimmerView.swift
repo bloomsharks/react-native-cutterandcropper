@@ -14,6 +14,7 @@ public protocol TrimmerViewDelegate: class {
     func didChangePositionBar(_ playerTime: CMTime)
     func positionBarStoppedMoving(_ playerTime: CMTime)
     func didChangeHandleBarPosition(StartTime:CMTime,EndTime:CMTime)
+    func positionBarStartedMoving()
 }
 
 /// A view to select a specific time range of a video. It consists of an asset preview with thumbnails inside a scroll view, two
@@ -315,7 +316,7 @@ public protocol TrimmerViewDelegate: class {
         let isLeftGesture = view == leftHandleView
         switch gestureRecognizer.state {
         case .began:
-       
+            self.delegate?.positionBarStartedMoving()
             if isLeftGesture {
                 leftHandleLabel.isHidden = false
                 leftHandleLabelLine.isHidden = false
@@ -450,7 +451,7 @@ public protocol TrimmerViewDelegate: class {
         }
     }
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        updateSelectedTime(stoppedMoving: false)
+         self.delegate?.positionBarStartedMoving()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.positionBar.frame.origin.x = self.leftHandleView.frame.maxX
         }

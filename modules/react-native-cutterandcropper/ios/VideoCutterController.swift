@@ -24,6 +24,9 @@ final class VideoCutterController : UIViewController {
     var assetURL : String!
     var videoMaxDuration : Double = 90
     
+    //variable indicating whether Player was or wasn't playing before moving trimmerViews positionBars
+    private var playerWasPlaying : Bool = false
+    
     private let themeColor = UIColor(red: 0.273, green: 0.471, blue: 0.995, alpha: 1.0)
     private var player: AVPlayer?
     private let trimmerView = TrimmerView()
@@ -49,6 +52,12 @@ final class VideoCutterController : UIViewController {
     private var playerView: UIView = {
         let playerView = UIView(frame: .zero)
         return playerView
+    }()
+    
+    private var playerViewControllsContainer: UIView = {
+        let PlayerViewOverlay = UIView(frame: .zero)
+        PlayerViewOverlay.backgroundColor = .clear
+        return PlayerViewOverlay
     }()
     
     private let topBar : UIView = {
@@ -109,6 +118,7 @@ final class VideoCutterController : UIViewController {
         let title = UILabel(frame: .zero)
         title.text = "Cutter"
         title.textColor = .black
+        title.textAlignment = .center
         return title
     }()
     
@@ -116,6 +126,13 @@ final class VideoCutterController : UIViewController {
         let activityIndicator = UIActivityIndicatorView()
         activityIndicator.isHidden = true
         return activityIndicator
+    }()
+    
+    private let playButton : UIButton = {
+        let playButton = UIButton(type: UIButton.ButtonType.system)
+        playButton.setImage(#imageLiteral(resourceName: "PlayIcon"), for: .normal)
+        playButton.tintColor = .white
+        return playButton
     }()
     
     
@@ -128,11 +145,15 @@ final class VideoCutterController : UIViewController {
         trimmerView.mainColor = themeColor
         resetBtn.backgroundColor = themeColor
         nextButton.setTitleColor(themeColor, for: .normal)
+        playerViewControllsContainer.isUserInteractionEnabled = true
         
+        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapPlayerView))
+        playerViewControllsContainer.addGestureRecognizer(tap)
         
         nextButton.addTarget(self,action: #selector(didTapNextBtn),for: .touchUpInside)
         backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
         resetBtn.addTarget(self,action: #selector(didTapResetBtn),for: .touchUpInside)
+        playButton.addTarget(self, action: #selector(didTapPlayButton), for: .touchUpInside)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -154,18 +175,22 @@ final class VideoCutterController : UIViewController {
                 self.videoDurationLabel.text = videoDurationLabelText
                 let videoMaxDurationString = Int(self.videoMaxDuration)
                 self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
+                
             }
         }
     }
     
     private func layout(){
         self.view.addSubview(playerView)
+        self.view.addSubview(playerViewControllsContainer)
         self.view.addSubview(leftMaskView)
         self.view.addSubview(rightMaskView)
         self.view.addSubview(topBar)
         self.view.addSubview(activityIndicator)
         self.view.addSubview(videoDurationLabel)
         self.view.addSubview(stackView)
+        
+        playerViewControllsContainer.addSubview(playButton)
         
         topBar.addSubview(backButton)
         topBar.addSubview(titleLabel)
@@ -174,6 +199,8 @@ final class VideoCutterController : UIViewController {
         view.bringSubviewToFront(activityIndicator)
         view.bringSubviewToFront(leftMaskView)
         view.bringSubviewToFront(rightMaskView)
+        
+        
         
         leftMaskView.layer.zPosition = 1
         rightMaskView.layer.zPosition = 1
@@ -212,6 +239,12 @@ final class VideoCutterController : UIViewController {
         self.playerView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4).isActive = true
         self.playerView.topAnchor.constraint(equalTo: topBar.bottomAnchor).isActive = true
         
+        self.playerViewControllsContainer.translatesAutoresizingMaskIntoConstraints = false
+        self.playerViewControllsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        self.playerViewControllsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        self.playerViewControllsContainer.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4).isActive = true
+        self.playerViewControllsContainer.topAnchor.constraint(equalTo: topBar.bottomAnchor).isActive = true
+        
         
         self.videoDurationLabel.translatesAutoresizingMaskIntoConstraints = false
         self.videoDurationLabel.topAnchor.constraint(equalTo: playerView.bottomAnchor,constant: 12).isActive = true
@@ -222,17 +255,17 @@ final class VideoCutterController : UIViewController {
         self.stackView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         self.stackView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         if #available(iOS 11.0, *) {
-                        self.stackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,constant: -15).isActive = true
-                    } else {
-                        self.stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor,constant: -15).isActive = true
-                    }
+            self.stackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,constant: -15).isActive = true
+        } else {
+            self.stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor,constant: -15).isActive = true
+        }
         
         self.trimmerView.translatesAutoresizingMaskIntoConstraints = false
         self.trimmerView.heightAnchor.constraint(equalToConstant: 45).isActive = true
         self.trimmerView.widthAnchor.constraint(equalToConstant: self.view.frame.width - 32).isActive = true
         
         self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-       
+        
         self.resetBtn.translatesAutoresizingMaskIntoConstraints = false
         self.resetBtn.heightAnchor.constraint(equalToConstant: 35).isActive = true
         self.resetBtn.widthAnchor.constraint(equalToConstant: 90).isActive = true
@@ -240,7 +273,6 @@ final class VideoCutterController : UIViewController {
         self.stackView.addArrangedSubview(trimmerView)
         self.stackView.addArrangedSubview(descriptionLabel)
         self.stackView.addArrangedSubview(resetBtn)
-        
         
         self.leftMaskView.translatesAutoresizingMaskIntoConstraints = false
         self.leftMaskView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
@@ -259,6 +291,18 @@ final class VideoCutterController : UIViewController {
         self.activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
         self.activityIndicator.heightAnchor.constraint(equalToConstant: 100).isActive = true
         self.activityIndicator.widthAnchor.constraint(equalToConstant: 100).isActive = true
+        
+        self.playButton.translatesAutoresizingMaskIntoConstraints = false
+        self.playButton.centerXAnchor.constraint(equalTo: playerView.centerXAnchor).isActive = true
+        self.playButton.centerYAnchor.constraint(equalTo: playerView.centerYAnchor).isActive = true
+        self.playButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        self.playButton.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        
+    }
+    @objc func didTapPlayerView(){
+        self.playButton.isHidden = false
+        self.player?.pause()
+        self.stopPlaybackTimeChecker()
     }
     
     @objc func didTapResetBtn(){
@@ -270,11 +314,17 @@ final class VideoCutterController : UIViewController {
         self.stopPlaybackTimeChecker()
     }
     
+    @objc func didTapPlayButton(){
+        self.player?.play()
+        self.startPlaybackTimeChecker()
+        self.playButton.isHidden = true
+    }
     
     @objc func didTapNextBtn(){
         self.activityIndicator.isHidden = false
         self.activityIndicator.startAnimating()
         self.nextButton.isUserInteractionEnabled = false
+        self.playButton.isUserInteractionEnabled = false
         
         stopPlaybackTimeChecker()
         let url = URL(string: self.assetURL)
@@ -347,6 +397,8 @@ final class VideoCutterController : UIViewController {
         layer.videoGravity = AVLayerVideoGravity.resizeAspect
         playerView.layer.sublayers?.forEach({$0.removeFromSuperlayer()})
         playerView.layer.addSublayer(layer)
+        
+        self.view.bringSubviewToFront(playerViewControllsContainer) 
     }
     
     private func startPlaybackTimeChecker() {
@@ -397,9 +449,14 @@ final class VideoCutterController : UIViewController {
         return "Duration \(minutes ?? "0"):\(seconds ?? "00") min"
     }
     
+    
 }
 
 extension VideoCutterController: TrimmerViewDelegate {
+    func positionBarStartedMoving() {
+        self.playerWasPlaying = (self.player?.rate != 0 && self.player?.error == nil) ? true : false
+    }
+    
     func didChangeHandleBarPosition(StartTime: CMTime, EndTime: CMTime) {
         let videoDurationLabelText = self.generateDurationTextFrom(startTime: StartTime, endTime: EndTime)
         self.videoDurationLabel.text = videoDurationLabelText
@@ -407,15 +464,22 @@ extension VideoCutterController: TrimmerViewDelegate {
     
     func positionBarStoppedMoving(_ playerTime: CMTime) {
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
-        player?.play()
+        if playerWasPlaying{
+            player?.play()
+            startPlaybackTimeChecker()
+            playButton.isHidden = true
+        }else{
+            playButton.isHidden = false
+        }
         
-        startPlaybackTimeChecker()
     }
     
     func didChangePositionBar(_ playerTime: CMTime) {
+        playButton.isHidden = true
         stopPlaybackTimeChecker()
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
+     
     }
 }
 
