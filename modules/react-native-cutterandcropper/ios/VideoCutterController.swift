@@ -57,13 +57,32 @@ final class VideoCutterController : UIViewController {
         return topBar
     }()
     
-    private var resetBtn : UIButton = {
-            let resetBtn = UIButton(type: UIButton.ButtonType.system)
-            resetBtn.setTitle("Reset", for: .normal)
-            resetBtn.setTitleColor(.white, for: .normal)
-            resetBtn.layer.cornerRadius = 6
-            return resetBtn
-        }()
+    private let resetBtn : UIButton = {
+        let resetBtn = UIButton(type: UIButton.ButtonType.system)
+        resetBtn.setTitle("Reset", for: .normal)
+        resetBtn.setTitleColor(.white, for: .normal)
+        resetBtn.layer.cornerRadius = 6
+        return resetBtn
+    }()
+    
+    private let stackView : UIStackView = {
+        let stackView = UIStackView(frame: .zero)
+        stackView.axis = .vertical
+        stackView.distribution = .equalCentering
+        stackView.alignment = .center
+        stackView.spacing = 15
+        stackView.layoutMargins = UIEdgeInsets(top: 40, left: 0, bottom: 40, right: 0)
+        stackView.isLayoutMarginsRelativeArrangement = true
+        return stackView
+    }()
+    
+    private let descriptionLabel : UILabel = {
+        let descriptionLabel = UILabel(frame: .zero)
+        descriptionLabel.textColor = .black
+        
+        descriptionLabel.font = UIFont.systemFont(ofSize: 15)
+        return descriptionLabel
+    }()
     
     private let backButton : UIButton = {
         let backButton = UIButton(type: UIButton.ButtonType.system)
@@ -82,8 +101,8 @@ final class VideoCutterController : UIViewController {
     private let videoDurationLabel : UILabel = {
         let videoDurationLabel = UILabel(frame: .zero)
         videoDurationLabel.font = UIFont.systemFont(ofSize: 13)
-               videoDurationLabel.textColor = .black
-               return videoDurationLabel
+        videoDurationLabel.textColor = .black
+        return videoDurationLabel
     }()
     
     private let titleLabel : UILabel = {
@@ -110,6 +129,7 @@ final class VideoCutterController : UIViewController {
         resetBtn.backgroundColor = themeColor
         nextButton.setTitleColor(themeColor, for: .normal)
         
+        
         nextButton.addTarget(self,action: #selector(didTapNextBtn),for: .touchUpInside)
         backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
         resetBtn.addTarget(self,action: #selector(didTapResetBtn),for: .touchUpInside)
@@ -121,7 +141,7 @@ final class VideoCutterController : UIViewController {
         setupVideoRelatedStuff()
     }
     
-   
+    
     private func setupVideoRelatedStuff(){
         DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {[weak self] in
             if let self = self, let assetURL = self.assetURL,let url = URL(string: assetURL) {
@@ -132,21 +152,20 @@ final class VideoCutterController : UIViewController {
                 let endTime = self.trimmerView.endTime ?? CMTime.zero
                 let videoDurationLabelText = self.generateDurationTextFrom(startTime: startTime, endTime: endTime)
                 self.videoDurationLabel.text = videoDurationLabelText
+                let videoMaxDurationString = Int(self.videoMaxDuration)
+                self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
             }
         }
     }
     
-    
     private func layout(){
-        self.view.addSubview(trimmerView)
         self.view.addSubview(playerView)
         self.view.addSubview(leftMaskView)
         self.view.addSubview(rightMaskView)
         self.view.addSubview(topBar)
         self.view.addSubview(activityIndicator)
         self.view.addSubview(videoDurationLabel)
-        self.view.addSubview(resetBtn)
-        
+        self.view.addSubview(stackView)
         
         topBar.addSubview(backButton)
         topBar.addSubview(titleLabel)
@@ -193,15 +212,35 @@ final class VideoCutterController : UIViewController {
         self.playerView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4).isActive = true
         self.playerView.topAnchor.constraint(equalTo: topBar.bottomAnchor).isActive = true
         
+        
         self.videoDurationLabel.translatesAutoresizingMaskIntoConstraints = false
         self.videoDurationLabel.topAnchor.constraint(equalTo: playerView.bottomAnchor,constant: 12).isActive = true
         self.videoDurationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         
+        self.stackView.translatesAutoresizingMaskIntoConstraints = false
+        self.stackView.topAnchor.constraint(equalTo:videoDurationLabel.bottomAnchor,constant: 15).isActive = true
+        self.stackView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        self.stackView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        if #available(iOS 11.0, *) {
+                        self.stackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,constant: -15).isActive = true
+                    } else {
+                        self.stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor,constant: -15).isActive = true
+                    }
+        
         self.trimmerView.translatesAutoresizingMaskIntoConstraints = false
-        self.trimmerView.leadingAnchor.constraint(equalTo: view.leadingAnchor,constant: 16).isActive = true
-        self.trimmerView.trailingAnchor.constraint(equalTo: view.trailingAnchor,constant: -16).isActive = true
-        self.trimmerView.topAnchor.constraint(equalTo: self.playerView.bottomAnchor, constant: 60).isActive = true
         self.trimmerView.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        self.trimmerView.widthAnchor.constraint(equalToConstant: self.view.frame.width - 32).isActive = true
+        
+        self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+       
+        self.resetBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.resetBtn.heightAnchor.constraint(equalToConstant: 35).isActive = true
+        self.resetBtn.widthAnchor.constraint(equalToConstant: 90).isActive = true
+        
+        self.stackView.addArrangedSubview(trimmerView)
+        self.stackView.addArrangedSubview(descriptionLabel)
+        self.stackView.addArrangedSubview(resetBtn)
+        
         
         self.leftMaskView.translatesAutoresizingMaskIntoConstraints = false
         self.leftMaskView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
@@ -214,18 +253,12 @@ final class VideoCutterController : UIViewController {
         self.rightMaskView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         self.rightMaskView.topAnchor.constraint(equalTo: trimmerView.topAnchor).isActive = true
         self.rightMaskView.heightAnchor.constraint(equalTo: trimmerView.heightAnchor).isActive = true
-     
+        
         self.activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         self.activityIndicator.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
         self.activityIndicator.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
         self.activityIndicator.heightAnchor.constraint(equalToConstant: 100).isActive = true
         self.activityIndicator.widthAnchor.constraint(equalToConstant: 100).isActive = true
-        
-        self.resetBtn.translatesAutoresizingMaskIntoConstraints = false
-        self.resetBtn.topAnchor.constraint(equalTo: trimmerView.bottomAnchor, constant: 50).isActive = true
-        self.resetBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        self.resetBtn.heightAnchor.constraint(equalToConstant: 35).isActive = true
-        self.resetBtn.widthAnchor.constraint(equalToConstant: 90).isActive = true
     }
     
     @objc func didTapResetBtn(){
@@ -242,7 +275,7 @@ final class VideoCutterController : UIViewController {
         self.activityIndicator.isHidden = false
         self.activityIndicator.startAnimating()
         self.nextButton.isUserInteractionEnabled = false
-       
+        
         stopPlaybackTimeChecker()
         let url = URL(string: self.assetURL)
         let startTime = trimmerView.startTime!
@@ -254,12 +287,12 @@ final class VideoCutterController : UIViewController {
             if error == nil, let url = url, let size = size{
                 DispatchQueue.main.async {[weak self] in
                     guard let self = self else {return}
-                   
+                    
                     let cuttedAsset = AVAsset(url:url)
-                     let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
+                    let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
                     let cgImage : CGImage?
                     do{
-                         cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
+                        cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
                         let image = UIImage(cgImage: cgImage!)
                         self.saveImage(image: image)
                         
@@ -348,28 +381,28 @@ final class VideoCutterController : UIViewController {
     private func generateDurationTextFrom(startTime:CMTime,endTime:CMTime) -> (String) {
         let secondsInDuration = endTime.seconds - startTime.seconds
         let secondsRounded = Int(secondsInDuration)
-          
-           let minutes : String!
-           if (secondsRounded % 3600)/60 < 10 && (secondsRounded % 3600)/60 > 0{
-               minutes = "0\((secondsRounded % 3600)/60)"
-           }else{
-               minutes = "\((secondsRounded % 3600)/60)"
-           }
-           let seconds : String!
-           if (secondsRounded % 3600) % 60 < 10 {
-               seconds = "0\((secondsRounded % 3600) % 60)"
-           }else{
-               seconds = "\((secondsRounded % 3600) % 60)"
-           }
+        
+        let minutes : String!
+        if (secondsRounded % 3600)/60 < 10 && (secondsRounded % 3600)/60 > 0{
+            minutes = "0\((secondsRounded % 3600)/60)"
+        }else{
+            minutes = "\((secondsRounded % 3600)/60)"
+        }
+        let seconds : String!
+        if (secondsRounded % 3600) % 60 < 10 {
+            seconds = "0\((secondsRounded % 3600) % 60)"
+        }else{
+            seconds = "\((secondsRounded % 3600) % 60)"
+        }
         return "Duration \(minutes ?? "0"):\(seconds ?? "00") min"
-           }
+    }
     
 }
 
 extension VideoCutterController: TrimmerViewDelegate {
     func didChangeHandleBarPosition(StartTime: CMTime, EndTime: CMTime) {
-         let videoDurationLabelText = self.generateDurationTextFrom(startTime: StartTime, endTime: EndTime)
-                    self.videoDurationLabel.text = videoDurationLabelText
+        let videoDurationLabelText = self.generateDurationTextFrom(startTime: StartTime, endTime: EndTime)
+        self.videoDurationLabel.text = videoDurationLabelText
     }
     
     func positionBarStoppedMoving(_ playerTime: CMTime) {
@@ -384,7 +417,6 @@ extension VideoCutterController: TrimmerViewDelegate {
         player?.pause()
         player?.seek(to: playerTime, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
     }
-    
 }
 
 
