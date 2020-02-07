@@ -17,9 +17,9 @@ final class Presenter : NSObject{
     var resolver: RCTPromiseResolveBlock!
     var rejecter: RCTPromiseRejectBlock!
     
-    @objc static func requiresMainQueueSetup() -> Bool {
-        return false
-    }
+//    @objc static func requiresMainQueueSetup() -> Bool {
+//        return false
+//    }
     
     @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping
         RCTPromiseResolveBlock,
