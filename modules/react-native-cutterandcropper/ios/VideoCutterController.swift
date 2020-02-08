@@ -175,7 +175,7 @@ final class VideoCutterController : UIViewController {
                 self.videoDurationLabel.text = videoDurationLabelText
                 let videoMaxDurationString = Int(self.videoMaxDuration)
                 self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
-                
+
             }
         }
     }
