@@ -130,7 +130,7 @@ final class VideoCutterController : UIViewController {
     
     private let playButton : UIButton = {
         let playButton = UIButton(type: UIButton.ButtonType.system)
-        playButton.setImage(#imageLiteral(resourceName: "PlayIcon"), for: .normal)
+        playButton.setImage(#imageLiteral(resourceName: "playIcon"), for: .normal)
         playButton.tintColor = .white
         return playButton
     }()
@@ -175,7 +175,7 @@ final class VideoCutterController : UIViewController {
                 self.videoDurationLabel.text = videoDurationLabelText
                 let videoMaxDurationString = Int(self.videoMaxDuration)
                 self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
-                
+
             }
         }
     }
