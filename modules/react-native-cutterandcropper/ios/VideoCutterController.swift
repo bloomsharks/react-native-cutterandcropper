@@ -130,7 +130,7 @@ final class VideoCutterController : UIViewController {
     
     private let playButton : UIButton = {
         let playButton = UIButton(type: UIButton.ButtonType.system)
-        playButton.setImage(#imageLiteral(resourceName: "PlayIcon"), for: .normal)
+        playButton.setImage(#imageLiteral(resourceName: "playIcon"), for: .normal)
         playButton.tintColor = .white
         return playButton
     }()
