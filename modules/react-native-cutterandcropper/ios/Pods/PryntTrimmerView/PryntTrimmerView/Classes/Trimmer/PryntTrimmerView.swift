@@ -252,20 +252,21 @@ public protocol TrimmerViewDelegate: class {
 }
     
    private func secondsToHoursMinutesSeconds (seconds : Double) -> (String, String, String)? {
-    let secondsRounded = Int(seconds)
+    let secondsRounded = round(seconds)
+    let secondsRoundedInt = Int(secondsRounded)
     
-    let hours = String(secondsRounded / 3600)
+    let hours = String(secondsRoundedInt / 3600)
     let minutes : String!
-    if (secondsRounded % 3600)/60 < 10 && (secondsRounded % 3600)/60 > 0{
-        minutes = "0\((secondsRounded % 3600)/60)"
+    if (secondsRoundedInt % 3600)/60 < 10 && (secondsRoundedInt % 3600)/60 > 0{
+        minutes = "0\((secondsRoundedInt % 3600)/60)"
     }else{
-        minutes = "\((secondsRounded % 3600)/60)"
+        minutes = "\((secondsRoundedInt % 3600)/60)"
     }
     let seconds : String!
-    if (secondsRounded % 3600) % 60 < 10 {
-        seconds = "0\((secondsRounded % 3600) % 60)"
+    if (secondsRoundedInt % 3600) % 60 < 10 {
+        seconds = "0\((secondsRoundedInt % 3600) % 60)"
     }else{
-        seconds = "\((secondsRounded % 3600) % 60)"
+        seconds = "\((secondsRoundedInt % 3600) % 60)"
     }
     return (hours, minutes,seconds)
     }

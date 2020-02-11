@@ -1,10 +1,3 @@
-//
-//  VideoCutterController.swift
-//  react-native-cutterandcropper
-//
-//  Created by Nika Samadashvili on Feb/4/20.
-//
-
 
 import UIKit
 import AVFoundation
@@ -135,10 +128,9 @@ final class VideoCutterController : UIViewController {
         return playButton
     }()
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = .white
+        view.backgroundColor = .white
         trimmerView.delegate = self
         trimmerView.handleColor = .white
         trimmerView.maxDuration = videoMaxDuration
@@ -154,12 +146,14 @@ final class VideoCutterController : UIViewController {
         backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
         resetBtn.addTarget(self,action: #selector(didTapResetBtn),for: .touchUpInside)
         playButton.addTarget(self, action: #selector(didTapPlayButton), for: .touchUpInside)
+        
+        layout()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        layout()
         setupVideoRelatedStuff()
+        self.topBar.dropShadow()
     }
     
     
@@ -168,14 +162,14 @@ final class VideoCutterController : UIViewController {
             if let self = self, let assetURL = self.assetURL,let url = URL(string: assetURL) {
                 self.trimmerView.asset = AVAsset(url: url)
                 self.addVideoPlayer(with: AVAsset(url: url), playerView: self.playerView)
-                self.topBar.dropShadow()
+            
                 let startTime = self.trimmerView.startTime ?? CMTime.zero
                 let endTime = self.trimmerView.endTime ?? CMTime.zero
                 let videoDurationLabelText = self.generateDurationTextFrom(startTime: startTime, endTime: endTime)
                 self.videoDurationLabel.text = videoDurationLabelText
+               
                 let videoMaxDurationString = Int(self.videoMaxDuration)
                 self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
-
             }
         }
     }
@@ -199,8 +193,6 @@ final class VideoCutterController : UIViewController {
         view.bringSubviewToFront(activityIndicator)
         view.bringSubviewToFront(leftMaskView)
         view.bringSubviewToFront(rightMaskView)
-        
-        
         
         leftMaskView.layer.zPosition = 1
         rightMaskView.layer.zPosition = 1
@@ -321,8 +313,8 @@ final class VideoCutterController : UIViewController {
     }
     
     @objc func didTapNextBtn(){
-        self.activityIndicator.isHidden = false
         self.activityIndicator.startAnimating()
+        self.activityIndicator.isHidden = false
         self.nextButton.isUserInteractionEnabled = false
         self.playButton.isUserInteractionEnabled = false
         
@@ -333,29 +325,29 @@ final class VideoCutterController : UIViewController {
         let destinationURL = createTemporaryDirectory().appendingPathComponent("\(randomInt).mp4")
         
         videoTrimmer.trimVideo(sourceURL: url!, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {
-            [weak self] (error, url, size) in
-            if error == nil, let url = url, let size = size{
+            [weak self] (error, url, _) in
+            if error == nil, let url = url{
                 DispatchQueue.main.async {[weak self] in
                     guard let self = self else {return}
-                    
-                    let cuttedAsset = AVAsset(url:url)
-                    let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
-                    let cgImage : CGImage?
-                    do{
-                        cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
-                        let image = UIImage(cgImage: cgImage!)
-                        self.saveImage(image: image)
-                        
-                        let thumbnail : String = self.thumbnailImageUri
-                        let mimeType : String = "video/mp4"
-                        let fileName : String = "\(self.randomInt).mp4"
-                        let height : CGFloat = abs(size.height)
-                        let width : CGFloat = abs(size.width)
-                        
-                        self.delegate?.didfinishWith(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnail, "type":mimeType,"isTemporary":true,"fileName":fileName])
-                    }catch{
-                        self.delegate?.didfinishWith(error: ["error":error])
-                    }
+                    self.delegate?.didfinishWith(data: ["uri":url,"randomInt":self.randomInt])
+//                    let cuttedAsset = AVAsset(url:url)
+//                    let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
+//                    let cgImage : CGImage?
+//                    do{
+//                        cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
+//                        let image = UIImage(cgImage: cgImage!)
+//                        self.saveImage(image: image)
+//
+//                        let thumbnail : String = self.thumbnailImageUri
+//                        let mimeType : String = "video/mp4"
+//                        let fileName : String = "\(self.randomInt).mp4"
+//                        let height : CGFloat = abs(size.height)
+//                        let width : CGFloat = abs(size.width)
+//
+//                        self.delegate?.didfinishWith(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnail, "type":mimeType,"isTemporary":true,"fileName":fileName])
+//                    }catch{
+//                        self.delegate?.didfinishWith(error: ["error":error])
+//                    }
                 }
             }else{
                 self?.delegate?.didfinishWith(error: ["error":error!])
@@ -398,7 +390,7 @@ final class VideoCutterController : UIViewController {
         playerView.layer.sublayers?.forEach({$0.removeFromSuperlayer()})
         playerView.layer.addSublayer(layer)
         
-        self.view.bringSubviewToFront(playerViewControllsContainer) 
+        self.view.bringSubviewToFront(playerViewControllsContainer)
     }
     
     private func startPlaybackTimeChecker() {
@@ -421,7 +413,6 @@ final class VideoCutterController : UIViewController {
         guard let startTime = trimmerView.startTime, let endTime = trimmerView.endTime, let player = player else {
             return
         }
-        
         let playBackTime = player.currentTime()
         trimmerView.seek(to: playBackTime)
         if playBackTime >= endTime {
@@ -432,19 +423,20 @@ final class VideoCutterController : UIViewController {
     
     private func generateDurationTextFrom(startTime:CMTime,endTime:CMTime) -> (String) {
         let secondsInDuration = endTime.seconds - startTime.seconds
-        let secondsRounded = Int(secondsInDuration)
+        let secondsRoundedDouble = round(secondsInDuration)
+        let secondsRoundedInt = Int(secondsRoundedDouble)
         
         let minutes : String!
-        if (secondsRounded % 3600)/60 < 10 && (secondsRounded % 3600)/60 > 0{
-            minutes = "0\((secondsRounded % 3600)/60)"
+        if (secondsRoundedInt % 3600)/60 < 10 && (secondsRoundedInt % 3600)/60 > 0{
+            minutes = "0\((secondsRoundedInt % 3600)/60)"
         }else{
-            minutes = "\((secondsRounded % 3600)/60)"
+            minutes = "\((secondsRoundedInt % 3600)/60)"
         }
         let seconds : String!
-        if (secondsRounded % 3600) % 60 < 10 {
-            seconds = "0\((secondsRounded % 3600) % 60)"
+        if (secondsRoundedInt % 3600) % 60 < 10 {
+            seconds = "0\((secondsRoundedInt % 3600) % 60)"
         }else{
-            seconds = "\((secondsRounded % 3600) % 60)"
+            seconds = "\((secondsRoundedInt % 3600) % 60)"
         }
         return "Duration \(minutes ?? "0"):\(seconds ?? "00") min"
     }

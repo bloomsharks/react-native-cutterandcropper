@@ -3,7 +3,7 @@ import AVFoundation
 import Foundation
 import UIKit
 
-class VideoTrimmer {
+final class VideoTrimmer {
     typealias TrimCompletion = (Error?,URL?,CGSize?) -> ()
     typealias TrimPoints = [(CMTime, CMTime)]
     
@@ -13,7 +13,7 @@ class VideoTrimmer {
 //        return filteredPresets.count > 0 || preset == AVAssetExportPresetPassthrough
 //    }
 //
-    func removeFileAtURLIfExists(url: URL) {
+   private func removeFileAtURLIfExists(url: URL) {
         
         let fileManager = FileManager.default
         
