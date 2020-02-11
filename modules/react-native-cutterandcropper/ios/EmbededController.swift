@@ -41,7 +41,6 @@ final class EmbededController : UIViewController{
         cropController.delegate = self
         cropController.toolbarPosition = .top
         cropController.cancelButtonTitle = ""
-        print(property)
         
         if property == "profile"{
             cropController.customAspectRatio = CGSize(width: 1, height: 1)
@@ -56,7 +55,7 @@ final class EmbededController : UIViewController{
                 cropController.customAspectRatio = CGSize(width: 4, height: 3)
             }
         }
-        if  property.contains("X"){
+        if property.contains("X"){
             let dimentions = property.components(separatedBy: "X")
             if let width = Int(dimentions[0]),let height = Int(dimentions[1]){
                  cropController.customAspectRatio = CGSize(width: width, height: height)

@@ -12,7 +12,7 @@ final class VideoTrimmer {
 //        let filteredPresets = compatiblePresets.filter { $0 == preset }
 //        return filteredPresets.count > 0 || preset == AVAssetExportPresetPassthrough
 //    }
-//
+
    private func removeFileAtURLIfExists(url: URL) {
         
         let fileManager = FileManager.default
@@ -39,14 +39,15 @@ final class VideoTrimmer {
         let asset = AVURLAsset(url: sourceURL, options: options)
         let preferredPreset = AVAssetExportPresetMediumQuality
         
-      //  if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
+       // if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
             
             let composition = AVMutableComposition()
             let videoCompTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: CMPersistentTrackID())
             let audioCompTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID())
             
             guard let assetVideoTrack: AVAssetTrack = asset.tracks(withMediaType: .video).first else { return }
-            guard let assetAudioTrack: AVAssetTrack = asset.tracks(withMediaType: .audio).first else { return }
+          //  guard
+                let assetAudioTrack: AVAssetTrack? = asset.tracks(withMediaType: .audio).first  //else { return }
            
             
             videoCompTrack!.preferredTransform = assetVideoTrack.preferredTransform
@@ -60,7 +61,9 @@ final class VideoTrimmer {
                 
                 do {
                     try videoCompTrack!.insertTimeRange(timeRangeForCurrentSlice, of: assetVideoTrack, at: accumulatedTime)
+                    if let assetAudioTrack = assetAudioTrack {
                     try audioCompTrack!.insertTimeRange(timeRangeForCurrentSlice, of: assetAudioTrack, at: accumulatedTime)
+                    }
                     accumulatedTime = CMTimeAdd(accumulatedTime, durationOfCurrentSlice)
                 }
                 catch let compError {
@@ -81,11 +84,11 @@ final class VideoTrimmer {
                 completion?(exportSession.error,destinationURL,videoSize)
                 
             }
-//        }
+        }
 //        else {
 //            print("TrimVideo - Could not find a suitable export preset for the input video")
 //            let error = NSError(domain: "com.bighug.ios", code: -1, userInfo: nil)
 //            completion?(error,nil,nil)
 //        }
-    }
+//    }
 }

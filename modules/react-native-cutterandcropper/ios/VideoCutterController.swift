@@ -325,7 +325,7 @@ final class VideoCutterController : UIViewController {
         let destinationURL = createTemporaryDirectory().appendingPathComponent("\(randomInt).mp4")
         
         videoTrimmer.trimVideo(sourceURL: url!, destinationURL: destinationURL, trimPoints: [(startTime,endTime)],completion: {
-            [weak self] (error, url, _) in
+            [weak self] (error, url, size) in
             if error == nil, let url = url{
                 DispatchQueue.main.async {[weak self] in
                     guard let self = self else {return}
