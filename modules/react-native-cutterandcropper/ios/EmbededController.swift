@@ -41,10 +41,14 @@ final class EmbededController : UIViewController{
         cropController.delegate = self
         cropController.toolbarPosition = .top
         cropController.cancelButtonTitle = ""
+        print(property)
         
-        
-        if property == "profile"{ cropController.customAspectRatio = CGSize(width: 1, height: 1) }
-        if property == "cover" {cropController.customAspectRatio = CGSize(width: 343, height: 136)}
+        if property == "profile"{
+            cropController.customAspectRatio = CGSize(width: 1, height: 1)
+        }
+        if property == "cover" {
+            cropController.customAspectRatio = CGSize(width: 343, height: 136)
+        }
         if property == "post"{
             if image.size.height >= image.size.width{
                 cropController.customAspectRatio = CGSize(width: 3, height: 4)
@@ -60,7 +64,6 @@ final class EmbededController : UIViewController{
                  cropController.customAspectRatio = CGSize(width: 1, height: 1)
             }
         }
-        else{cropController.customAspectRatio = CGSize(width: 1, height: 1)}
         
         return cropController
     }
