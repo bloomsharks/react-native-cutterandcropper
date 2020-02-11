@@ -129,7 +129,7 @@ final class EmbededController : UIViewController{
             let height : Any = abs(thumbnailImg.size.height * image.scale)
             let width : Any = abs(thumbnailImg.size.width * image.scale)
             let mimeType : String = "video/mp4"
-            let fileName : String = fileName//"\(self.randomInt).mp4"
+            let fileName : String = "\(fileName).mp4"
             
             self.delegate?.emitMeta(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnailURL, "type":mimeType,"isTemporary":true,"fileName":fileName])
         }catch{
@@ -166,6 +166,7 @@ extension EmbededController : VideoCutterDelegate {
         self.navigationController?.dismiss(animated: false, completion: {[weak self] in
             if let url = data["uri"] as? URL, let randomInt = data["randomInt"] as? Int{
                 let stringifiedRandomInt = String(randomInt)
+                print(url,randomInt)
                 self?.emitMetaData(of: url,withName: stringifiedRandomInt)
             }
         })
