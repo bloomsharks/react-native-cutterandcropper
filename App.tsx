@@ -44,7 +44,7 @@ const App = () => {
             onPress={NativeModules.Presenter.presentImagePicker(
               'video',
               '10',
-              false,
+              true,
             ).then(e => console.log(e, 'kaxa'))}
 
             //   {

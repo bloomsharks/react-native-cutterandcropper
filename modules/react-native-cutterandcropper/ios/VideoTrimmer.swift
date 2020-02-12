@@ -44,10 +44,10 @@ final class VideoTrimmer {
             let composition = AVMutableComposition()
         
         guard let assetVideoTrack: AVAssetTrack = asset.tracks(withMediaType: .video).first else { return }
-        let assetAudioTrack: AVAssetTrack? = asset.tracks(withMediaType: .audio).first
-        
+       
         let videoCompTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: CMPersistentTrackID())
         
+         let assetAudioTrack: AVAssetTrack? = asset.tracks(withMediaType: .audio).first
         var audioCompTrack: AVMutableCompositionTrack?
         if assetAudioTrack != nil {
          audioCompTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID())

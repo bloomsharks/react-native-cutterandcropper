@@ -116,7 +116,7 @@ final class EmbededController : UIViewController{
     }
     
     
-    private func emitMetaData(of url:URL, withName fileName:String){
+    private func emitMetaData(of url:URL, withName fileName:String,videoFormat format:String){
         let cuttedAsset = AVAsset(url:url)
         let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
         thumbGenerator.appliesPreferredTrackTransform = true
@@ -130,8 +130,8 @@ final class EmbededController : UIViewController{
             let thumbnailImg : UIImage = UIImage(cgImage: cgImage!)
             let height : Any = abs(thumbnailImg.size.height * image.scale)
             let width : Any = abs(thumbnailImg.size.width * image.scale)
-            let mimeType : String = "video/mp4"
-            let fileName : String = "\(fileName).mp4"
+            let mimeType : String = "video/\(format)"
+            let fileName : String = "\(fileName).\(format)"
             
             self.delegate?.emitMeta(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnailURL, "type":mimeType,"isTemporary":true,"fileName":fileName])
         }catch{
@@ -168,8 +168,7 @@ extension EmbededController : VideoCutterDelegate {
         self.navigationController?.dismiss(animated: false, completion: {[weak self] in
             if let url = data["uri"] as? URL, let randomInt = data["randomInt"] as? Int{
                 let stringifiedRandomInt = String(randomInt)
-                print(url,randomInt)
-                self?.emitMetaData(of: url,withName: stringifiedRandomInt)
+            self?.emitMetaData(of: url,withName: stringifiedRandomInt,videoFormat: "mp4")
             }
         })
     }
@@ -214,8 +213,12 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
         }else if mediaType == "video"{
             if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
                 guard skipEditing != true else{
-                    let stringifiedRandomInt = String(self.randomInt)
-                    self.emitMetaData(of: videoURL,withName: stringifiedRandomInt)
+                    let fileFullName = videoURL.lastPathComponent
+                    let fileNameComponents = fileFullName.components(separatedBy: ".")
+                    let videoFormat = fileNameComponents.last ?? ""
+                    let fileNameArray = fileNameComponents.dropLast()
+                    let fileName = fileNameArray.joined(separator:".")
+                    self.emitMetaData(of: videoURL,withName: fileName,videoFormat:videoFormat)
                     return
                 }
                 let videoCutterController = setupVideoCutterController(with: videoURL.absoluteString)
