@@ -350,6 +350,7 @@ final class VideoCutterController : UIViewController {
 //                    }
                 }
             }else{
+                print(error,"kaxa")
                 self?.delegate?.didfinishWith(error: ["error":error!])
             }
         })

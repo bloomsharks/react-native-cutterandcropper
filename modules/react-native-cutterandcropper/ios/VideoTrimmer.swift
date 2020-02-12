@@ -42,12 +42,17 @@ final class VideoTrimmer {
        // if  verifyPresetForAsset(preset: preferredPreset, asset: asset) {
             
             let composition = AVMutableComposition()
-            let videoCompTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: CMPersistentTrackID())
-            let audioCompTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID())
-            
-            guard let assetVideoTrack: AVAssetTrack = asset.tracks(withMediaType: .video).first else { return }
-          //  guard
-                let assetAudioTrack: AVAssetTrack? = asset.tracks(withMediaType: .audio).first  //else { return }
+        
+        guard let assetVideoTrack: AVAssetTrack = asset.tracks(withMediaType: .video).first else { return }
+        let assetAudioTrack: AVAssetTrack? = asset.tracks(withMediaType: .audio).first
+        
+        let videoCompTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: CMPersistentTrackID())
+        
+        var audioCompTrack: AVMutableCompositionTrack?
+        if assetAudioTrack != nil {
+         audioCompTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: CMPersistentTrackID())
+        }
+          
            
             
             videoCompTrack!.preferredTransform = assetVideoTrack.preferredTransform
@@ -61,9 +66,9 @@ final class VideoTrimmer {
                 
                 do {
                     try videoCompTrack!.insertTimeRange(timeRangeForCurrentSlice, of: assetVideoTrack, at: accumulatedTime)
-                    if let assetAudioTrack = assetAudioTrack {
+                if let assetAudioTrack = assetAudioTrack{
                     try audioCompTrack!.insertTimeRange(timeRangeForCurrentSlice, of: assetAudioTrack, at: accumulatedTime)
-                    }
+                      }
                     accumulatedTime = CMTimeAdd(accumulatedTime, durationOfCurrentSlice)
                 }
                 catch let compError {
@@ -82,7 +87,7 @@ final class VideoTrimmer {
             
             exportSession.exportAsynchronously {
                 completion?(exportSession.error,destinationURL,videoSize)
-                
+                print(exportSession.error)
             }
         }
 //        else {
