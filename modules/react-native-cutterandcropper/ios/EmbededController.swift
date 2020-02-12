@@ -130,7 +130,7 @@ final class EmbededController : UIViewController{
             let thumbnailImg : UIImage = UIImage(cgImage: cgImage!)
             let height : Any = abs(thumbnailImg.size.height * image.scale)
             let width : Any = abs(thumbnailImg.size.width * image.scale)
-            let mimeType : String = "video/\(format)"
+            let mimeType : String = format.generateMimeType()
             let fileName : String = "\(fileName).\(format)"
             
             self.delegate?.emitMeta(data: ["width":width,"height":height,"uri": url.absoluteString,"thumbnail": thumbnailURL, "type":mimeType,"isTemporary":true,"fileName":fileName])
