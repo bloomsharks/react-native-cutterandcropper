@@ -78,7 +78,6 @@ public typealias CropViewCroppingStyle = TOCropViewCroppingStyle
      
      */
     @objc optional func cropViewController(_ cropViewController: CropViewController, didFinishCancelled cancelled: Bool)
-    
 }
 
 ///------------------------------------------------

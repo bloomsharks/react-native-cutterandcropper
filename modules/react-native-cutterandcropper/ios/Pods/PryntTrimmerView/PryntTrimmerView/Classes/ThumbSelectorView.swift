@@ -87,6 +87,7 @@ public class ThumbSelectorView: AVAssetTimeSelector {
             currentThumbConstraint = leftThumbConstraint!.constant
             updateSelectedTime()
         case .changed:
+
             let translation = gestureRecognizer.translation(in: superView)
             updateThumbConstraint(with: translation)
             layoutIfNeeded()

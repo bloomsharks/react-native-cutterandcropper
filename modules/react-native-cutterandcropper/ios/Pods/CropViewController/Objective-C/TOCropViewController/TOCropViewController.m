@@ -135,8 +135,6 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     if (animated) {
         self.inTransition = YES;
         [self setNeedsStatusBarAppearanceUpdate];
-        [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationSlide];
-        [super viewWillAppear:animated];
     }
     
     // If this controller is pushed onto a navigation stack, set flags noting the
@@ -214,8 +212,6 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
         [self.navigationController setNavigationBarHidden:self.navigationBarHidden animated:animated];
         [self.navigationController setToolbarHidden:self.toolbarHidden animated:animated];
     }
-    [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
-    [super viewWillDisappear:animated];
 }
 
 - (void)viewDidDisappear:(BOOL)animated

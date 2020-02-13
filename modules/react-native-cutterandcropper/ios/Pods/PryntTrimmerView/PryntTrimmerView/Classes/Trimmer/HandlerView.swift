@@ -20,3 +20,4 @@ class HandlerView: UIView {
         return hitFrame.contains(point)
     }
 }
+

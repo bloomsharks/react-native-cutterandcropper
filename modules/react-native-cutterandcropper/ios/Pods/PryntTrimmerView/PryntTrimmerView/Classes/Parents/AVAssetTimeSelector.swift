@@ -90,3 +90,4 @@ public class AVAssetTimeSelector: UIView, UIScrollViewDelegate {
         return timeRatio * durationSize
     }
 }
+

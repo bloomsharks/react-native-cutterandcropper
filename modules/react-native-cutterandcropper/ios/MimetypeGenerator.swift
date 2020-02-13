@@ -118,7 +118,7 @@ internal let mimeTypes = [
 
 internal func MimeType(ext: String?) -> String {
     let lowercase_ext: String = ext!.lowercased()
-    print(ext,lowercase_ext,"kaxa")
+
     if ext != nil && mimeTypes.contains(where: { $0.0 == lowercase_ext }) {
         return mimeTypes[lowercase_ext]!
     }

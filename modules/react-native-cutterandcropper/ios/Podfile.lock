@@ -3,27 +3,27 @@ PODS:
   - PryntTrimmerView (4.0.0)
 
 DEPENDENCIES:
-  - CropViewController (from `https://github.com/wammy67/TOCropViewController`)
-  - PryntTrimmerView (from `https://github.com/wammy67/PryntTrimmerView`)
+  - CropViewController (from `https://github.com/bloomsharks/image-cropper-view`)
+  - PryntTrimmerView (from `https://github.com/bloomsharks/video-trimmer-view`)
 
 EXTERNAL SOURCES:
   CropViewController:
-    :git: https://github.com/wammy67/TOCropViewController
+    :git: https://github.com/bloomsharks/image-cropper-view
   PryntTrimmerView:
-    :git: https://github.com/wammy67/PryntTrimmerView
+    :git: https://github.com/bloomsharks/video-trimmer-view
 
 CHECKOUT OPTIONS:
   CropViewController:
-    :commit: 5f727daecf47aa27c2199cf68b6766fe132906c0
-    :git: https://github.com/wammy67/TOCropViewController
+    :commit: 152fffbc20f2e2579c4a0a747ef0c8f450dd3f54
+    :git: https://github.com/bloomsharks/image-cropper-view
   PryntTrimmerView:
-    :commit: 5636e5cba63b8a29fae4467296c25c3fbb65b285
-    :git: https://github.com/wammy67/PryntTrimmerView
+    :commit: bb2f231428acb07172af12f87abd904f93f679ae
+    :git: https://github.com/bloomsharks/video-trimmer-view
 
 SPEC CHECKSUMS:
-  CropViewController: 2bf3e902bd20fc273a46b258ed1944aa119746d9
-  PryntTrimmerView: 67e67573ffd4c073f1308effa66aefd0cfa667a0
+  CropViewController: 1aac40093c5739e60d992b04724a55d12a689a4c
+  PryntTrimmerView: f25226097c64a6944f56774840a381655e41788a
 
-PODFILE CHECKSUM: da18624a15b56db4261496d25fea7109395c05a3
+PODFILE CHECKSUM: c82ac39cae7a81cf3afadf3946b2770ec11a9409
 
-COCOAPODS: 1.6.1
+COCOAPODS: 1.8.4
