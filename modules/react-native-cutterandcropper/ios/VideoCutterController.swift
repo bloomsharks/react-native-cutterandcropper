@@ -70,7 +70,7 @@ final class VideoCutterController : UIViewController {
     private let stackView : UIStackView = {
         let stackView = UIStackView(frame: .zero)
         stackView.axis = .vertical
-        stackView.distribution = .equalCentering
+        stackView.distribution = .equalSpacing
         stackView.alignment = .center
         stackView.spacing = 15
         stackView.layoutMargins = UIEdgeInsets(top: 40, left: 0, bottom: 40, right: 0)
@@ -90,6 +90,7 @@ final class VideoCutterController : UIViewController {
         let backButton = UIButton(type: UIButton.ButtonType.system)
         backButton.setImage(#imageLiteral(resourceName: "backIcon"), for: .normal)
         backButton.tintColor = .black
+        backButton.contentEdgeInsets = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         return backButton
     }()
     
@@ -97,6 +98,7 @@ final class VideoCutterController : UIViewController {
         let nextButton = UIButton(type: UIButton.ButtonType.system)
         nextButton.setTitle("Next", for: .normal)
         nextButton.tintColor = .black
+        nextButton.contentEdgeInsets = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
         return nextButton
     }()
     
@@ -209,15 +211,15 @@ final class VideoCutterController : UIViewController {
         
         self.backButton.translatesAutoresizingMaskIntoConstraints = false
         self.backButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
-        self.backButton.leftAnchor.constraint(equalTo: topBar.leftAnchor, constant: 15).isActive = true
+        self.backButton.leftAnchor.constraint(equalTo: topBar.leftAnchor, constant: 6).isActive = true
         self.backButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
         self.backButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         self.nextButton.translatesAutoresizingMaskIntoConstraints = false
         self.nextButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
-        self.nextButton.rightAnchor.constraint(equalTo: topBar.rightAnchor, constant: -15).isActive = true
+        self.nextButton.rightAnchor.constraint(equalTo: topBar.rightAnchor, constant: -8).isActive = true
         self.nextButton.widthAnchor.constraint(equalToConstant: 50).isActive = true
-        self.nextButton.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        self.nextButton.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.titleLabel.centerYAnchor.constraint(equalTo: topBar.centerYAnchor).isActive = true
@@ -253,7 +255,7 @@ final class VideoCutterController : UIViewController {
         }
         
         self.trimmerView.translatesAutoresizingMaskIntoConstraints = false
-        self.trimmerView.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        self.trimmerView.heightAnchor.constraint(equalToConstant: 75).isActive = true
         self.trimmerView.widthAnchor.constraint(equalToConstant: self.view.frame.width - 32).isActive = true
         
         self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false

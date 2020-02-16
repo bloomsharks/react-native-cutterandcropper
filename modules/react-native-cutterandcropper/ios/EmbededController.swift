@@ -1,4 +1,3 @@
-
 //
 //  Created by Nika Samadashvili on Dec/27/19.
 //  Copyright © 2019 Facebook. All rights reserved.
@@ -14,10 +13,11 @@ protocol EmbededControllerDelegate : class {
 
 final class EmbededController : UIViewController{
     var imagePicker : UIImagePickerController!
-    
+    var documentPicker : UIDocumentPickerViewController!
     private var image : UIImage?
     //it can be picked Image from UIImagePicker as well as videoThumbnail
     private var imageUri : String?
+    //compression when choosing image
     private var compressionQuality : CGFloat = 0.6
     
     private let randomInt = Int.random(in: 0..<100000)
@@ -30,8 +30,13 @@ final class EmbededController : UIViewController{
     override func viewDidLoad() {
         super.viewDidLoad()
         view.isHidden = true
-        presentImagePicker()
+        if mediaType == "file"{
+             presentDocumentPicker()
+        }else{
+             presentImagePicker()
+        }
     }
+    
     
     
     
@@ -58,9 +63,9 @@ final class EmbededController : UIViewController{
         if property.contains("X"){
             let dimentions = property.components(separatedBy: "X")
             if let width = Int(dimentions[0]),let height = Int(dimentions[1]){
-                 cropController.customAspectRatio = CGSize(width: width, height: height)
+                cropController.customAspectRatio = CGSize(width: width, height: height)
             }else{
-                 cropController.customAspectRatio = CGSize(width: 1, height: 1)
+                cropController.customAspectRatio = CGSize(width: 1, height: 1)
             }
         }
         
@@ -76,20 +81,62 @@ final class EmbededController : UIViewController{
         return videoCutterController
     }
     
+    
+    private func presentDocumentPicker() {
+        guard mediaType == "file" else{
+            return
+        }
+        
+        var documentTypes : [String] = []
+        
+        if property == "photo"{
+            documentTypes = ["public.image"]
+        }
+        if property == "video" {
+              documentTypes = ["public.movie","public.video"]
+        }else{
+            documentTypes =  ["public.data"]
+        }
+      
+        documentPicker = UIDocumentPickerViewController(documentTypes: documentTypes, in: .import)
+        documentPicker.delegate = self
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        if #available(iOS 11.0, *) {
+                    documentPicker.allowsMultipleSelection = false
+          }
+        
+        documentPicker.willMove(toParent: self.navigationController)
+        self.navigationController!.addChild(documentPicker)
+        documentPicker.view.frame = self.view.frame
+        self.navigationController!.view.addSubview(documentPicker.view)
+        documentPicker.didMove(toParent: self.navigationController!)
+        
+    }
+    
+    
     private func presentImagePicker(){
+        guard mediaType == "photo" || mediaType == "video" else{
+            return
+        }
+            
         imagePicker = UIImagePickerController()
         imagePicker.allowsEditing = false
         imagePicker.delegate = self
         if #available(iOS 11.0, *) {
             imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
         }
+        
+        var mediaTypes : [String] = []
+        
         if mediaType == "photo"{
-            imagePicker.mediaTypes = ["public.image"]
+            mediaTypes = ["public.image"]
         }else if mediaType == "video"{
-            imagePicker.mediaTypes = ["public.movie"]
+            mediaTypes = ["public.movie"]
         }else{
-            imagePicker.mediaTypes = ["public.movie","public.image"]
+            return
         }
+        
+          imagePicker.mediaTypes = mediaTypes
         self.navigationController?.setNavigationBarHidden(true, animated: false)
         
         imagePicker.willMove(toParent: self.navigationController)
@@ -115,8 +162,14 @@ final class EmbededController : UIViewController{
         }
     }
     
+    private func emitMetaData(ofFile url:URL, withName fileName:String, format:String ){
+        let mimeType = format.generateMimeType()
+        let fileFullName = "\(fileName).\(format)"
+        self.delegate?.emitMeta(data: ["uri" : url.absoluteString, "fileName" : fileFullName, "type": mimeType] )
+    }
     
-    private func emitMetaData(of url:URL, withName fileName:String,videoFormat format:String){
+    
+    private func emitMetaData(ofVideo url:URL, withName fileName:String,videoFormat format:String){
         let cuttedAsset = AVAsset(url:url)
         let thumbGenerator = AVAssetImageGenerator(asset: cuttedAsset)
         thumbGenerator.appliesPreferredTrackTransform = true
@@ -152,7 +205,7 @@ final class EmbededController : UIViewController{
     }
     
     deinit{
-        imagePicker.removeFromParent()
+        imagePicker?.removeFromParent()
     }
 }
 
@@ -168,7 +221,7 @@ extension EmbededController : VideoCutterDelegate {
         self.navigationController?.dismiss(animated: false, completion: {[weak self] in
             if let url = data["uri"] as? URL, let randomInt = data["randomInt"] as? Int{
                 let stringifiedRandomInt = String(randomInt)
-            self?.emitMetaData(of: url,withName: stringifiedRandomInt,videoFormat: "mp4")
+                self?.emitMetaData(ofVideo: url,withName: stringifiedRandomInt,videoFormat: "mp4")
             }
         })
     }
@@ -218,20 +271,39 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
                     let videoFormat = fileNameComponents.last ?? ""
                     let fileNameArray = fileNameComponents.dropLast()
                     let fileName = fileNameArray.joined(separator:".")
-                    self.emitMetaData(of: videoURL,withName: fileName,videoFormat:videoFormat)
+                    self.emitMetaData(ofVideo: videoURL,withName: fileName,videoFormat:videoFormat)
                     return
                 }
                 let videoCutterController = setupVideoCutterController(with: videoURL.absoluteString)
                 self.navigationController?.pushViewController(videoCutterController, animated: true)
             }
-        }else{
-            if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{
-                let stringifiedRandomInt = String(randomInt)
-                saveImage(image: image, withName: stringifiedRandomInt)
-                emitMetaData(of: image)
-            }else if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
-                self.delegate?.emitMeta(data: ["uri":videoURL.absoluteString])
-            }
         }
+//        else{
+//            if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{
+//                let stringifiedRandomInt = String(randomInt)
+//                saveImage(image: image, withName: stringifiedRandomInt)
+//                emitMetaData(of: image)
+//            }else if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
+//                self.delegate?.emitMeta(data: ["uri":videoURL.absoluteString])
+//            }
+//        }
     }
 }
+
+extension EmbededController : UIDocumentPickerDelegate{
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]){
+      let url = urls[0]
+        let fileFullName = url.lastPathComponent
+                           let fileNameComponents = fileFullName.components(separatedBy: ".")
+                           let fileFormat = fileNameComponents.last ?? ""
+                           let fileNameArray = fileNameComponents.dropLast()
+                           let fileName = fileNameArray.joined(separator:".")
+        self.emitMetaData(ofFile: url, withName: fileName, format: fileFormat)
+    }
+    
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController){
+         self.navigationController?.dismiss(animated: true, completion: nil)
+    }
+}
+
