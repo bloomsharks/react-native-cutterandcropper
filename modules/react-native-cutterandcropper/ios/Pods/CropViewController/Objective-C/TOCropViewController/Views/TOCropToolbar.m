@@ -109,7 +109,7 @@
     [self addSubview:_cancelTextButton];
     
     UIFont * customFont = [UIFont systemFontOfSize: 17]; //custom font
-    CGSize labelSize = [@"Crop" sizeWithFont:customFont constrainedToSize:CGSizeMake(35, 20) lineBreakMode:NSLineBreakByTruncatingTail];
+    CGSize labelSize = [@"Crop" sizeWithFont:customFont constrainedToSize:CGSizeMake(45, 20) lineBreakMode:NSLineBreakByTruncatingTail];
     _title = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, labelSize.width, labelSize.height)];
     _title.text = @"Crop";
     _title.font = customFont;
@@ -122,7 +122,6 @@
     _title.textAlignment = NSTextAlignmentCenter;
      [self addSubview: _title];
   
-    
     
     _cancelIconButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [_cancelIconButton setImage:[TOCropToolbar cancelImage] forState:UIControlStateNormal];
@@ -254,7 +253,10 @@
         CGSize buttonSize = (CGSize){44.0f,44.0f};
         
         NSMutableArray *buttonsInOrderHorizontally = [NSMutableArray new];
-         [buttonsInOrderHorizontally addObject:self.title];
+        // [buttonsInOrderHorizontally addObject:self.title];
+       
+        _title.center = CGPointMake(self.frame.size.width  / 2,
+        self.frame.size.height / 2);
         
         [self layoutToolbarButtons:buttonsInOrderHorizontally withSameButtonSize:buttonSize inContainerRect:containerRect horizontally:YES];
     }

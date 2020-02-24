@@ -4,7 +4,7 @@
 //
 
 import UIKit
-import AVFoundation
+import Photos
 
 protocol EmbededControllerDelegate : class {
     func emitMeta(data: [String:Any])
@@ -15,8 +15,9 @@ final class EmbededController : UIViewController{
     var imagePicker : UIImagePickerController!
     var documentPicker : UIDocumentPickerViewController!
     private var image : UIImage?
-    //it can be picked Image from UIImagePicker as well as videoThumbnail
-    private var imageUri : String?
+    //it can be picked media from UIImagePicker as well as videoThumbnail
+    private var imageUri : String = ""
+    private var videoUri : String = ""
     //compression when choosing image
     private var compressionQuality : CGFloat = 0.6
     
@@ -24,6 +25,7 @@ final class EmbededController : UIViewController{
     var property : String!
     var mediaType : String!
     var skipEditing : Bool!
+    var doneBtnTitle: String!
     
     weak var delegate : EmbededControllerDelegate?
     
@@ -31,9 +33,9 @@ final class EmbededController : UIViewController{
         super.viewDidLoad()
         view.isHidden = true
         if mediaType == "file"{
-             presentDocumentPicker()
+            presentDocumentPicker()
         }else{
-             presentImagePicker()
+            presentImagePicker()
         }
     }
     
@@ -75,8 +77,10 @@ final class EmbededController : UIViewController{
     private func setupVideoCutterController(with videoURL: String) -> VideoCutterController{
         let videoMaxDuration = Double(property) ?? 90
         let videoCutterController = VideoCutterController()
+        
         videoCutterController.delegate = self
         videoCutterController.assetURL = videoURL
+        videoCutterController.doneBtnTitle = doneBtnTitle
         videoCutterController.videoMaxDuration = videoMaxDuration
         return videoCutterController
     }
@@ -93,17 +97,17 @@ final class EmbededController : UIViewController{
             documentTypes = ["public.image"]
         }
         if property == "video" {
-              documentTypes = ["public.movie","public.video"]
+            documentTypes = ["public.movie","public.video"]
         }else{
             documentTypes =  ["public.data"]
         }
-      
+        
         documentPicker = UIDocumentPickerViewController(documentTypes: documentTypes, in: .import)
         documentPicker.delegate = self
         self.navigationController?.setNavigationBarHidden(true, animated: false)
         if #available(iOS 11.0, *) {
-                    documentPicker.allowsMultipleSelection = false
-          }
+            documentPicker.allowsMultipleSelection = false
+        }
         
         documentPicker.willMove(toParent: self.navigationController)
         self.navigationController!.addChild(documentPicker)
@@ -118,13 +122,14 @@ final class EmbededController : UIViewController{
         guard mediaType == "photo" || mediaType == "video" else{
             return
         }
-            
+        
         imagePicker = UIImagePickerController()
         imagePicker.allowsEditing = false
         imagePicker.delegate = self
-        if #available(iOS 11.0, *) {
-            imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
-        }
+        imagePicker.sourceType = .photoLibrary
+        //        if #available(iOS 11.0, *) {
+        //            imagePicker.videoExportPreset = AVAssetExportPresetPassthrough
+        //        }
         
         var mediaTypes : [String] = []
         
@@ -136,7 +141,7 @@ final class EmbededController : UIViewController{
             return
         }
         
-          imagePicker.mediaTypes = mediaTypes
+        imagePicker.mediaTypes = mediaTypes
         self.navigationController?.setNavigationBarHidden(true, animated: false)
         
         imagePicker.willMove(toParent: self.navigationController)
@@ -146,8 +151,24 @@ final class EmbededController : UIViewController{
         imagePicker.didMove(toParent: self.navigationController!)
     }
     
+    private func saveVideo(with url:URL,withName fileName: String, format: String) -> String {
+        let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
+        
+        let targetURL = tempDirectoryURL.appendingPathComponent("\(fileName).\(format)")
+        
+        if let data = try? Data(contentsOf: url) {
+            do {
+                try data.write(to: targetURL)
+               self.videoUri = targetURL.absoluteString
+            } catch let error {
+                self.videoUri = error.localizedDescription
+            }
+        }
+        
+        return targetURL.absoluteString
+    }
     
-    private func saveImage(image: UIImage,withName fileName:String) {
+    private func saveImage(image: UIImage,withName fileName:String) -> String {
         let tempDirectoryURL = NSURL.fileURL(withPath: NSTemporaryDirectory(), isDirectory: true)
         
         let targetURL = tempDirectoryURL.appendingPathComponent("\(fileName).jpg")
@@ -160,12 +181,13 @@ final class EmbededController : UIViewController{
                 self.imageUri = error.localizedDescription
             }
         }
+        return targetURL.absoluteString
     }
     
     private func emitMetaData(ofFile url:URL, withName fileName:String, format:String ){
         let mimeType = format.generateMimeType()
         let fileFullName = "\(fileName).\(format)"
-        self.delegate?.emitMeta(data: ["uri" : url.absoluteString, "fileName" : fileFullName, "type": mimeType] )
+        self.delegate?.emitMeta(data: ["uri" : url.absoluteString, "fileName" : fileFullName, "type": mimeType])
     }
     
     
@@ -177,9 +199,9 @@ final class EmbededController : UIViewController{
         do{
             cgImage = try thumbGenerator.copyCGImage(at: CMTimeMake(value: 5, timescale: 1), actualTime: nil)
             let image = UIImage(cgImage: cgImage!)
-            self.saveImage(image: image,withName:fileName)
+            let _ = self.saveImage(image: image,withName:fileName)
             
-            let thumbnailURL : String = imageUri ?? ""
+            let thumbnailURL : String = imageUri
             let thumbnailImg : UIImage = UIImage(cgImage: cgImage!)
             let height : Any = abs(thumbnailImg.size.height * image.scale)
             let width : Any = abs(thumbnailImg.size.width * image.scale)
@@ -198,7 +220,7 @@ final class EmbededController : UIViewController{
         let width : Any = image.size.width * image.scale
         let fileName : Any = "\(self.randomInt).jpg"
         let fileSize : Any = image.jpegData(compressionQuality: self.compressionQuality )?.count ?? 0
-        let uri : Any = self.imageUri ?? "nil"
+        let uri : Any = self.imageUri
         let type : String = "image/jpeg"
         
         self.delegate?.emitMeta(data: ["height" : height,"width" : width,"fileName" :  fileName,"fileSize" : fileSize,"uri" : uri,"type" : type])
@@ -209,6 +231,7 @@ final class EmbededController : UIViewController{
     }
 }
 
+//MARK: Delegate functions
 extension EmbededController : VideoCutterDelegate {
     
     func didfinishWith(error: [String : Error]) {
@@ -236,7 +259,7 @@ extension EmbededController : VideoCutterDelegate {
 extension EmbededController : CropViewControllerDelegate{
     func cropViewController(_ cropViewController: CropViewController, didCropToImage image: UIImage, withRect cropRect: CGRect, angle: Int) {
         let stringifiedRandomInt = String(randomInt)
-        self.saveImage(image: image, withName: stringifiedRandomInt)
+        let _ = self.saveImage(image: image, withName: stringifiedRandomInt)
         self.emitMetaData(of:image)
     }
     
@@ -256,7 +279,7 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
             let image = info[UIImagePickerController.InfoKey.originalImage] as! UIImage
             guard skipEditing != true else{
                 let stringifiedRandomInt = String(randomInt)
-                saveImage(image: image, withName: stringifiedRandomInt)
+                let _ = saveImage(image: image, withName: stringifiedRandomInt)
                 emitMetaData(of: image)
                 return
             }
@@ -271,39 +294,34 @@ extension EmbededController :  UIImagePickerControllerDelegate, UINavigationCont
                     let videoFormat = fileNameComponents.last ?? ""
                     let fileNameArray = fileNameComponents.dropLast()
                     let fileName = fileNameArray.joined(separator:".")
-                    self.emitMetaData(ofVideo: videoURL,withName: fileName,videoFormat:videoFormat)
+                    let _ = saveVideo(with: videoURL, withName: fileName, format: videoFormat)
+                    if let tempUrl = URL(string: self.videoUri){
+                        self.emitMetaData(ofVideo: tempUrl,withName: fileName,videoFormat:videoFormat)
+                    }
                     return
                 }
+                
                 let videoCutterController = setupVideoCutterController(with: videoURL.absoluteString)
                 self.navigationController?.pushViewController(videoCutterController, animated: true)
             }
         }
-//        else{
-//            if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage{
-//                let stringifiedRandomInt = String(randomInt)
-//                saveImage(image: image, withName: stringifiedRandomInt)
-//                emitMetaData(of: image)
-//            }else if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL{
-//                self.delegate?.emitMeta(data: ["uri":videoURL.absoluteString])
-//            }
-//        }
     }
 }
 
 extension EmbededController : UIDocumentPickerDelegate{
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]){
-      let url = urls[0]
+        let url = urls[0]
         let fileFullName = url.lastPathComponent
-                           let fileNameComponents = fileFullName.components(separatedBy: ".")
-                           let fileFormat = fileNameComponents.last ?? ""
-                           let fileNameArray = fileNameComponents.dropLast()
-                           let fileName = fileNameArray.joined(separator:".")
+        let fileNameComponents = fileFullName.components(separatedBy: ".")
+        let fileFormat = fileNameComponents.last ?? ""
+        let fileNameArray = fileNameComponents.dropLast()
+        let fileName = fileNameArray.joined(separator:".")
         self.emitMetaData(ofFile: url, withName: fileName, format: fileFormat)
     }
     
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController){
-         self.navigationController?.dismiss(animated: true, completion: nil)
+        self.navigationController?.dismiss(animated: true, completion: nil)
     }
 }
 

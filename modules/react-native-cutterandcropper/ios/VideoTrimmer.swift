@@ -87,7 +87,6 @@ final class VideoTrimmer {
             
             exportSession.exportAsynchronously {
                 completion?(exportSession.error,destinationURL,videoSize)
-                print(exportSession.error)
             }
         }
 //        else {

@@ -12,6 +12,6 @@
 
 @interface RCT_EXTERN_MODULE(Presenter, NSObject)
 
-RCT_EXTERN_METHOD(presentImagePicker:(NSString *)mediaType property:(NSString *)property skip:(BOOL)skip resolver:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(presentImagePicker:(NSString *)mediaType property:(NSString *)property doneBtnTitle:(NSString *)doneBtnTitle skip:(BOOL)skip resolver:(RCTPromiseResolveBlock)resolve
    rejecter:(RCTPromiseRejectBlock)reject)
 @end

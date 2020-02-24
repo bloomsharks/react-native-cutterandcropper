@@ -42,9 +42,10 @@ const App = () => {
           <Button
             title="yellow button"
             onPress={NativeModules.Presenter.presentImagePicker(
-              'file',
               'video',
-              false,
+              '15',
+              'done',
+              true,
             ).then(e => console.log(e, 'kaxa'))}
 
             //   {

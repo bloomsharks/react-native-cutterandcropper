@@ -16,7 +16,7 @@ final class VideoCutterController : UIViewController {
     
     var assetURL : String!
     var videoMaxDuration : Double = 90
-    
+    var doneBtnTitle : String!
     //variable indicating whether Player was or wasn't playing before moving trimmerViews positionBars
     private var playerWasPlaying : Bool = false
     
@@ -27,6 +27,7 @@ final class VideoCutterController : UIViewController {
     private var randomInt = Int.random(in: 0...1000000)
     private var thumbnailImageUri : String!
     private var thumbNailImageCompressionQuality : CGFloat = 0.6
+    
     
     private var leftMaskView: UIView = {
         let leftMaskView = UIView(frame: .zero)
@@ -98,7 +99,8 @@ final class VideoCutterController : UIViewController {
         let nextButton = UIButton(type: UIButton.ButtonType.system)
         nextButton.setTitle("Next", for: .normal)
         nextButton.tintColor = .black
-        nextButton.contentEdgeInsets = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
+        nextButton.isUserInteractionEnabled = false
+      //  nextButton.contentEdgeInsets = UIEdgeInsets(top: 5, left: 0, bottom: 5, right: 0)
         return nextButton
     }()
     
@@ -139,7 +141,9 @@ final class VideoCutterController : UIViewController {
         trimmerView.mainColor = themeColor
         resetBtn.backgroundColor = themeColor
         nextButton.setTitleColor(themeColor, for: .normal)
+
         playerViewControllsContainer.isUserInteractionEnabled = true
+        
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTapPlayerView))
         playerViewControllsContainer.addGestureRecognizer(tap)
@@ -148,6 +152,10 @@ final class VideoCutterController : UIViewController {
         backButton.addTarget(self,action: #selector(didTapBackBtn),for: .touchUpInside)
         resetBtn.addTarget(self,action: #selector(didTapResetBtn),for: .touchUpInside)
         playButton.addTarget(self, action: #selector(didTapPlayButton), for: .touchUpInside)
+        
+        if doneBtnTitle != nil, doneBtnTitle != ""{
+            nextButton.setTitle(doneBtnTitle, for: .normal)
+        }
         
         layout()
     }
@@ -158,7 +166,7 @@ final class VideoCutterController : UIViewController {
         self.topBar.dropShadow()
     }
     
-    
+
     private func setupVideoRelatedStuff(){
         DispatchQueue.main.asyncAfter(deadline:.now() + 0.3) {[weak self] in
             if let self = self, let assetURL = self.assetURL,let url = URL(string: assetURL) {
@@ -172,6 +180,8 @@ final class VideoCutterController : UIViewController {
                
                 let videoMaxDurationString = Int(self.videoMaxDuration)
                 self.descriptionLabel.text = "Trim video to max \(videoMaxDurationString) seconds"
+                
+                self.nextButton.isUserInteractionEnabled = true
             }
         }
     }

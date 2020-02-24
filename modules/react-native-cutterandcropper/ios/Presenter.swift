@@ -21,10 +21,10 @@ final class Presenter : NSObject{
 //        return false
 //    }
     
-    @objc func presentImagePicker(_ mediaType: String, property: String, skip:Bool, resolver resolve: @escaping
+    @objc func presentImagePicker(_ mediaType: String, property: String, doneBtnTitle: String,skip:Bool, resolver resolve: @escaping
         RCTPromiseResolveBlock,
                                   rejecter reject: @escaping RCTPromiseRejectBlock){
-        
+       
         DispatchQueue.main.async {[weak self] in
             guard let self = self else {return}
             
@@ -33,6 +33,7 @@ final class Presenter : NSObject{
             embededController.property = property
             embededController.mediaType = mediaType
             embededController.skipEditing = skip
+            embededController.doneBtnTitle = doneBtnTitle
             
             let navigationController = UINavigationController(rootViewController: embededController)
             navigationController.modalPresentationStyle = .fullScreen
